@@ -17,8 +17,7 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
-    "prestart": "curl -o data/class_data.json https://raw.githubusercontent.com/Paolotsname/pf2-stats/main/class_data.json",
-    "prestart": "curl -o data/enemy_data.json https://raw.githubusercontent.com/Paolotsname/pf2-stats/main/enemy_data.json",
+    "prestart": "curl -o data/class_data.json https://raw.githubusercontent.com/Paolotsname/pf2-stats/main/class_data.json && curl -o data/enemy_data.json https://raw.githubusercontent.com/Paolotsname/pf2-stats/main/enemy_data.json",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
