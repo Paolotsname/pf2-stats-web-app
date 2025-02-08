@@ -1,6 +1,5 @@
 import React, { ChangeEvent } from "react";
 
-// Define the type for the PickLevel component's props
 interface PickLevelProps {
     label: string;
     value: number;
@@ -11,7 +10,7 @@ const PickLevel = ({ label, value, onChange }: PickLevelProps) => {
     return (
         <label>
             {label}:
-            <input type="number" value={value} onChange={onChange} />
+            <input type="number" min="1" max="20" value={value} onChange={onChange} />
         </label>
     );
 };
