@@ -1,6 +1,5 @@
 import React, { ChangeEvent } from "react";
 
-// Define the type for the PickLevel component's props
 interface AttributeBonusProps {
     label: string;
     value: number;

@@ -1,10 +1,15 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 
-const PickClass = () => {
+interface ClassPickProps {
+    value: string;
+    onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const PickClass = ({ value, onChange }: ClassPickProps) => {
     return (
         <label>
             Pick a class:
-            <select name="selectedClass">
+            <select value={value} onChange={onChange}>
                 <option value="alchemist">Alchemist</option>
                 <option value="ranger">Ranger</option>
             </select>
