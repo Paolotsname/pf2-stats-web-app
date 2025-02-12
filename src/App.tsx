@@ -14,14 +14,14 @@ interface Player {
     intelligence: number;
     wisdom: number;
     charisma: number;
-    weaponStrike0: number; // Add weaponStrike0
-    weaponStrike1: number; // Add weaponStrike1
-    weaponStrike2: number; // Add weaponStrike2
-    spellStrike: number; // Add spellStrike
-    defendChance: number; // Add defendChance
-    fortitude: number; // Add fortitude
-    reflex: number; // Add reflex
-    will: number; // Add will
+    weaponStrike0: number;
+    weaponStrike1: number;
+    weaponStrike2: number;
+    spellAttack: number;
+    armorClass: number;
+    fortitude: number;
+    reflex: number;
+    will: number;
 }
 
 export default function App() {
@@ -35,43 +35,41 @@ export default function App() {
             intelligence: 0,
             wisdom: 0,
             charisma: 0,
-            weaponStrike0: classData["alchemist"][0][0] + 0, // Initial weaponStrike0
-            weaponStrike1: classData["alchemist"][0][0] + 0 - 5, // Initial weaponStrike1
-            weaponStrike2: classData["alchemist"][0][0] + 0 - 10, // Initial weaponStrike2
-            spellStrike: classData["alchemist"][0][1] + 0, // Initial spellStrike
-            defendChance: classData["alchemist"][0][2] + 0, // Initial defendChance
-            fortitude: classData["alchemist"][0][3] + 0, // Initial fortitude
-            reflex: classData["alchemist"][0][4] + 0, // Initial reflex
-            will: classData["alchemist"][0][5] + 0, // Initial will
+            weaponStrike0: 0,
+            weaponStrike1: 0,
+            weaponStrike2: 0,
+            spellAttack: 0,
+            armorClass: 0,
+            fortitude: 0,
+            reflex: 0,
+            will: 0,
         },
     ]);
-    const [pwl, setPwl] = useState<boolean>(false);
+    const [proficiencyWithoutLevel, setPwl] = useState<boolean>(false);
 
-    // Helper function to calculate stats
     const calculateStats = (player: Player) => {
         const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma } = player;
         let weaponStrike0 = classData[playerClass][playerLevel - 1][0] + strength;
         let weaponStrike1 = classData[playerClass][playerLevel - 1][0] + strength - 5;
         let weaponStrike2 = classData[playerClass][playerLevel - 1][0] + strength - 10;
-        let spellStrike = classData[playerClass][playerLevel - 1][1] + charisma;
-        let defendChance = classData[playerClass][playerLevel - 1][2] + dexterity;
+        let spellAttack = classData[playerClass][playerLevel - 1][1] + charisma;
+        let armorClass = classData[playerClass][playerLevel - 1][2] + 10 + dexterity;
         let fortitude = classData[playerClass][playerLevel - 1][3] + constitution;
         let reflex = classData[playerClass][playerLevel - 1][4] + dexterity;
         let will = classData[playerClass][playerLevel - 1][5] + wisdom;
 
-        // Add playerLevel to stats if pwl is false
-        if (!pwl) {
+        if (!proficiencyWithoutLevel) {
             weaponStrike0 += playerLevel;
             weaponStrike1 += playerLevel;
             weaponStrike2 += playerLevel;
-            spellStrike += playerLevel;
-            defendChance += playerLevel;
+            spellAttack += playerLevel;
+            armorClass += playerLevel;
             fortitude += playerLevel;
             reflex += playerLevel;
             will += playerLevel;
         }
 
-        return { weaponStrike0, weaponStrike1, weaponStrike2, spellStrike, defendChance, fortitude, reflex, will };
+        return { weaponStrike0, weaponStrike1, weaponStrike2, spellAttack, armorClass, fortitude, reflex, will };
     };
 
     // Recalculate stats for all players when pwl changes
@@ -81,7 +79,7 @@ export default function App() {
             return { ...player, ...stats };
         });
         setPlayers(updatedPlayers);
-    }, [pwl]); // Trigger when pwl changes
+    }, [proficiencyWithoutLevel]); // Trigger when pwl changes
 
     // Handler to add a new player
     const addPlayer = () => {
@@ -126,14 +124,13 @@ export default function App() {
         <div className="p-6">
             <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
                 <PWLCheckbox
-                    bool={pwl}
+                    bool={proficiencyWithoutLevel}
                     onChange={(e) => setPwl(e.target.checked)}
                 />
                 <PickAverageType />
             </div>
 
             <div className="flex flex-col space-y-4">
-                {/* Button to add a new player */}
                 <button
                     onClick={addPlayer}
                     className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -141,7 +138,6 @@ export default function App() {
                     Add Player
                 </button>
 
-                {/* Render PlayerCards */}
                 {players.map((player, index) => (
                     <div key={index} className="flex flex-row space-x-4">
                         <PlayerCard

@@ -1,4 +1,6 @@
 import React, { ChangeEvent } from "react";
+import classData from "../data/class_data.json";
+
 
 interface Player {
     playerClass: string;
@@ -12,8 +14,8 @@ interface Player {
     weaponStrike0: number;
     weaponStrike1: number;
     weaponStrike2: number;
-    spellStrike: number;
-    defendChance: number;
+    spellAttack: number;
+    armorClass: number;
     fortitude: number;
     reflex: number;
     will: number;
@@ -54,8 +56,8 @@ const PlayerCard = ({
         weaponStrike0,
         weaponStrike1,
         weaponStrike2,
-        spellStrike,
-        defendChance,
+        spellAttack,
+        armorClass,
         fortitude,
         reflex,
         will,
@@ -66,13 +68,12 @@ const PlayerCard = ({
         return (
             <label>
                 Pick a class:
-                <select
-                    value={playerClass}
-                    onChange={onClassChange}
-                    className="ml-2 p-1 border rounded"
-                >
-                    <option value="alchemist">Alchemist</option>
-                    <option value="ranger">Ranger</option>
+                <select value={playerClass} onChange={onClassChange}>
+                    {Object.keys(classData).map((key) => (
+                        <option key={key} value={key}>
+                            {key}
+                        </option>
+                    ))}
                 </select>
             </label>
         );
@@ -136,8 +137,8 @@ const PlayerCard = ({
                 <p>Weapon Strike (1st): +{weaponStrike0}</p>
                 <p>Weapon Strike (2nd): +{weaponStrike1}</p>
                 <p>Weapon Strike (3rd): +{weaponStrike2}</p>
-                <p>Spell Strike: +{spellStrike}</p>
-                <p>Defend Chance: +{defendChance}</p>
+                <p>Spell Attack: +{spellAttack}</p>
+                <p>Armor Class: {armorClass}</p>
                 <p>Fortitude: +{fortitude}</p>
                 <p>Reflex: +{reflex}</p>
                 <p>Will: +{will}</p>
