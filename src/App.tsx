@@ -3,6 +3,9 @@ import "./index.css";
 import PlayerCard from "./components/PlayerCard";
 import PickAverageType from "./components/PickAverageType";
 import PWLCheckbox from "./components/PWLCheckbox";
+
+// classData has proficiencies in this order:
+// weapon, spellcasting, armor, fortitude, reflex, will
 import classData from "./data/class_data.json";
 
 interface Player {
@@ -27,7 +30,7 @@ interface Player {
 export default function App() {
     const [players, setPlayers] = useState<Player[]>([
         {
-            playerClass: "alchemist",
+            playerClass: "Alchemist",
             playerLevel: 1,
             strength: 0,
             dexterity: 0,
@@ -84,7 +87,7 @@ export default function App() {
     // Handler to add a new player
     const addPlayer = () => {
         const newPlayer = {
-            playerClass: "alchemist",
+            playerClass: "Alchemist",
             playerLevel: 1,
             strength: 0,
             dexterity: 0,
@@ -93,7 +96,7 @@ export default function App() {
             wisdom: 0,
             charisma: 0,
             ...calculateStats({
-                playerClass: "alchemist",
+                playerClass: "Alchemist",
                 playerLevel: 1,
                 strength: 0,
                 dexterity: 0,
