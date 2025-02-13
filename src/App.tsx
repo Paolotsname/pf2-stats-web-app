@@ -65,7 +65,7 @@ export default function App() {
             weaponStrike0 += playerLevel;
             weaponStrike1 += playerLevel;
             weaponStrike2 += playerLevel;
-            spellAttack += playerLevel;
+            spellAttack += (classData[playerClass][playerLevel - 1][1] != 0) ? playerLevel : 0;
             armorClass += playerLevel;
             fortitude += playerLevel;
             reflex += playerLevel;
