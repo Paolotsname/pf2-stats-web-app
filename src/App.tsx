@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./index.css";
 import PlayerCard from "./components/PlayerCard";
+import EnemyCard from "./components/EnemyCard";
 import PickAverageType from "./components/PickAverageType";
 import PWLCheckbox from "./components/PWLCheckbox";
-
-// classData has proficiencies in this order:
-// weapon, spellcasting, armor, fortitude, reflex, will
 import classData from "./data/class_data.json";
+import enemyData from "./data/enemy_data.json";
 
 interface Player {
     playerClass: string;
@@ -17,6 +16,9 @@ interface Player {
     intelligence: number;
     wisdom: number;
     charisma: number;
+}
+
+interface PlayerStats {
     weaponStrike0: number;
     weaponStrike1: number;
     weaponStrike2: number;
@@ -27,117 +29,155 @@ interface Player {
     will: number;
 }
 
+const initialPlayer: Player = {
+    playerClass: "Alchemist",
+    playerLevel: 1,
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+};
+
+interface Enemy {
+    level: number;
+    hp: number;
+    ac: number;
+    fort: number;
+    refl: number;
+    will: number;
+    attack_bonus: number;
+    spell_dc: number;
+    spell_attack_bonus: number;
+}
+
+const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean): Enemy => {
+    return getEnemyStats(playerLevel, averageType, pwl);
+};
+
+const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
+    const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma } = player;
+    const proficiencies = classData[playerClass][playerLevel - 1];
+
+    const levelBonus = pwl ? 0 : playerLevel;
+
+    return {
+        weaponStrike0: proficiencies[0] + strength + levelBonus,
+        weaponStrike1: proficiencies[0] + strength - 5 + levelBonus,
+        weaponStrike2: proficiencies[0] + strength - 10 + levelBonus,
+        spellAttack: proficiencies[1] ? proficiencies[1] + charisma + levelBonus : 0,
+        armorClass: proficiencies[2] + 10 + dexterity + levelBonus,
+        fortitude: proficiencies[3] + constitution + levelBonus,
+        reflex: proficiencies[4] + dexterity + levelBonus,
+        will: proficiencies[5] + wisdom + levelBonus,
+    };
+};
+
+const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy => {
+    const realAverageType = pwl ? averageType : `${averageType}_pwl`;
+    const data = enemyData[level]?.[realAverageType];
+
+    if (!data) {
+        console.error(`Enemy data not found for level ${level} and type ${realAverageType}`);
+        return {
+            level: level,
+            hp: 20,
+            ac: 15,
+            fort: 5,
+            refl: 5,
+            will: 5,
+            attack_bonus: 5,
+            spell_dc: 15,
+            spell_attack_bonus: 5,
+        };
+    }
+
+    return {
+        level: data.level,
+        hp: data.hp,
+        ac: data.ac,
+        fort: data.fort,
+        refl: data.refl,
+        will: data.will,
+        attack_bonus: data.attack_bonus,
+        spell_dc: data.spell_dc,
+        spell_attack_bonus: data.spell_attack_bonus,
+    };
+};
+
 export default function App() {
-    const [players, setPlayers] = useState<Player[]>([
-        {
-            playerClass: "Alchemist",
-            playerLevel: 1,
-            strength: 0,
-            dexterity: 0,
-            constitution: 0,
-            intelligence: 0,
-            wisdom: 0,
-            charisma: 0,
-            weaponStrike0: 0,
-            weaponStrike1: 0,
-            weaponStrike2: 0,
-            spellAttack: 0,
-            armorClass: 0,
-            fortitude: 0,
-            reflex: 0,
-            will: 0,
-        },
-    ]);
+    const [players, setPlayers] = useState<(Player & PlayerStats)[]>([{ ...initialPlayer, ...calculatePlayerStats(initialPlayer, false) }]);
+    const [enemies, setEnemies] = useState<Enemy[]>([getInitialEnemy(initialPlayer.playerLevel, "mean", false)]);
+    const [averageType, setAverageType] = useState<string>("mean");
     const [proficiencyWithoutLevel, setPwl] = useState<boolean>(false);
 
-    const calculateStats = (player: Player) => {
-        const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma } = player;
-        let weaponStrike0 = classData[playerClass][playerLevel - 1][0] + strength;
-        let weaponStrike1 = classData[playerClass][playerLevel - 1][0] + strength - 5;
-        let weaponStrike2 = classData[playerClass][playerLevel - 1][0] + strength - 10;
-        let spellAttack = classData[playerClass][playerLevel - 1][1] + charisma;
-        let armorClass = classData[playerClass][playerLevel - 1][2] + 10 + dexterity;
-        let fortitude = classData[playerClass][playerLevel - 1][3] + constitution;
-        let reflex = classData[playerClass][playerLevel - 1][4] + dexterity;
-        let will = classData[playerClass][playerLevel - 1][5] + wisdom;
-
-        if (!proficiencyWithoutLevel) {
-            weaponStrike0 += playerLevel;
-            weaponStrike1 += playerLevel;
-            weaponStrike2 += playerLevel;
-            spellAttack += (classData[playerClass][playerLevel - 1][1] != 0) ? playerLevel : 0;
-            armorClass += playerLevel;
-            fortitude += playerLevel;
-            reflex += playerLevel;
-            will += playerLevel;
-        }
-
-        return { weaponStrike0, weaponStrike1, weaponStrike2, spellAttack, armorClass, fortitude, reflex, will };
-    };
-
-    // Recalculate stats for all players when pwl changes
+    // Update player stats when `proficiencyWithoutLevel` changes
     useEffect(() => {
-        const updatedPlayers = players.map((player) => {
-            const stats = calculateStats(player);
-            return { ...player, ...stats };
-        });
-        setPlayers(updatedPlayers);
-    }, [proficiencyWithoutLevel]); // Trigger when pwl changes
+        setPlayers((players) =>
+            players.map((player) => ({
+                ...player,
+                ...calculatePlayerStats(player, proficiencyWithoutLevel),
+            }))
+        );
+    }, [proficiencyWithoutLevel]);
 
-    // Handler to add a new player
+    // Update enemy stats when `averageType`, `proficiencyWithoutLevel`, or the first player's level changes
+    useEffect(() => {
+        if (players.length > 0) {
+            const firstPlayerLevel = players[0].playerLevel;
+            setEnemies((enemies) =>
+                enemies.map((enemy) => getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel))
+            );
+        }
+    }, [averageType, proficiencyWithoutLevel, players]);
+
     const addPlayer = () => {
-        const newPlayer = {
-            playerClass: "Alchemist",
-            playerLevel: 1,
-            strength: 0,
-            dexterity: 0,
-            constitution: 0,
-            intelligence: 0,
-            wisdom: 0,
-            charisma: 0,
-            ...calculateStats({
-                playerClass: "Alchemist",
-                playerLevel: 1,
-                strength: 0,
-                dexterity: 0,
-                constitution: 0,
-                intelligence: 0,
-                wisdom: 0,
-                charisma: 0,
-            }),
-        };
-        setPlayers([...players, newPlayer]);
+        const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+        setPlayers((players) => [...players, newPlayer]);
     };
 
-    // Handler to remove a player
     const removePlayer = (index: number) => {
-        const newPlayers = players.filter((_, i) => i !== index);
-        setPlayers(newPlayers);
+        setPlayers((players) => players.filter((_, i) => i !== index));
     };
 
-    // Handler to update a player's data
     const updatePlayer = (index: number, updatedPlayer: Player) => {
-        const newPlayers = [...players];
-        const stats = calculateStats(updatedPlayer); // Recalculate stats
-        newPlayers[index] = { ...updatedPlayer, ...stats }; // Update player with new stats
-        setPlayers(newPlayers);
+        setPlayers((players) => {
+            const newPlayers = [...players];
+            newPlayers[index] = { ...updatedPlayer, ...calculatePlayerStats(updatedPlayer, proficiencyWithoutLevel) };
+            return newPlayers;
+        });
+    };
+
+    const addEnemy = () => {
+        if (players.length > 0) {
+            const firstPlayerLevel = players[0].playerLevel;
+            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
+            setEnemies((enemies) => [...enemies, newEnemy]);
+        }
+    };
+
+    const removeEnemy = (index: number) => {
+        setEnemies((enemies) => enemies.filter((_, i) => i !== index));
+    };
+
+    const updateEnemy = (index: number, updatedEnemy: Enemy) => {
+        setEnemies((enemies) => {
+            const newEnemies = [...enemies];
+            newEnemies[index] = updatedEnemy;
+            return newEnemies;
+        });
     };
 
     return (
         <div className="p-6">
             <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
-                <PWLCheckbox
-                    bool={proficiencyWithoutLevel}
-                    onChange={(e) => setPwl(e.target.checked)}
-                />
-                <PickAverageType />
+                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(e) => setPwl(e.target.checked)} />
+                <PickAverageType value={averageType} onChange={(value) => setAverageType(value)} />
             </div>
 
             <div className="flex flex-col space-y-4">
-                <button
-                    onClick={addPlayer}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
+                <button onClick={addPlayer} className="bg-blue-500 text-white px-4 py-2 rounded">
                     Add Player
                 </button>
 
@@ -145,60 +185,28 @@ export default function App() {
                     <div key={index} className="flex flex-row space-x-4">
                         <PlayerCard
                             player={player}
-                            onClassChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    playerClass: e.target.value,
-                                })
-                            }
-                            onLevelChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    playerLevel: Number(e.target.value),
-                                })
-                            }
-                            onStrengthChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    strength: Number(e.target.value),
-                                })
-                            }
-                            onDexterityChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    dexterity: Number(e.target.value),
-                                })
-                            }
-                            onConstitutionChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    constitution: Number(e.target.value),
-                                })
-                            }
-                            onIntelligenceChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    intelligence: Number(e.target.value),
-                                })
-                            }
-                            onWisdomChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    wisdom: Number(e.target.value),
-                                })
-                            }
-                            onCharismaChange={(e) =>
-                                updatePlayer(index, {
-                                    ...player,
-                                    charisma: Number(e.target.value),
-                                })
-                            }
+                            onUpdate={(updatedPlayer) => updatePlayer(index, updatedPlayer)}
                         />
-                        <button
-                            onClick={() => removePlayer(index)}
-                            className="bg-red-500 text-white px-4 py-2 rounded"
-                        >
+                        <button onClick={() => removePlayer(index)} className="bg-red-500 text-white px-4 py-2 rounded">
                             Remove Player
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex flex-col space-y-4 mt-8">
+                <button onClick={addEnemy} className="bg-blue-500 text-white px-4 py-2 rounded">
+                    Add Enemy
+                </button>
+
+                {enemies.map((enemy, index) => (
+                    <div key={index} className="flex flex-row space-x-4">
+                        <EnemyCard
+                            enemy={enemy}
+                            onUpdate={(updatedEnemy) => updateEnemy(index, updatedEnemy)}
+                        />
+                        <button onClick={() => removeEnemy(index)} className="bg-red-500 text-white px-4 py-2 rounded">
+                            Remove Enemy
                         </button>
                     </div>
                 ))}
