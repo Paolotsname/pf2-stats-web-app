@@ -1,16 +1,25 @@
 import React from "react";
 
-const PickClass = () => {
+interface PickAverageTypeProps {
+    value: string;
+    onChange: (value: string) => void;
+}
+
+const PickAverageType = ({ value, onChange }: PickAverageTypeProps) => {
+    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        onChange(event.target.value);
+    };
+
     return (
-        <label>
-            Pick a type of average:
-            <select name="selectedClass">
-                <option value="mean">mean</option>
-                <option value="median">median</option>
-                <option value="mode">mode</option>
+        <label className="flex items-center space-x-2">
+            <span>Pick Average Type:</span>
+            <select value={value} onChange={handleChange} className="ml-2 p-1 border rounded">
+                <option value="mean">Mean</option>
+                <option value="median">Median</option>
+                <option value="mode">Mode</option>
             </select>
         </label>
     );
 };
 
-export default PickClass;
+export default PickAverageType;

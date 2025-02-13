@@ -75,26 +75,11 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
 };
 
 const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy => {
-    const realAverageType = pwl ? averageType : `${averageType}_pwl`;
-    const data = enemyData[level]?.[realAverageType];
-
-    if (!data) {
-        console.error(`Enemy data not found for level ${level} and type ${realAverageType}`);
-        return {
-            level: level,
-            hp: 20,
-            ac: 15,
-            fort: 5,
-            refl: 5,
-            will: 5,
-            attack_bonus: 5,
-            spell_dc: 15,
-            spell_attack_bonus: 5,
-        };
-    }
+    const realAverageType = pwl ? averageType : averageType + "_pwl"
+    const data = enemyData[level + 1][realAverageType];
 
     return {
-        level: data.level,
+        level: level,
         hp: data.hp,
         ac: data.ac,
         fort: data.fort,
@@ -126,9 +111,7 @@ export default function App() {
     useEffect(() => {
         if (players.length > 0) {
             const firstPlayerLevel = players[0].playerLevel;
-            setEnemies((enemies) =>
-                enemies.map((enemy) => getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel))
-            );
+            setEnemies([getInitialEnemy(firstPlayerLevel, averageType, proficiencyWithoutLevel)]);
         }
     }, [averageType, proficiencyWithoutLevel, players]);
 
@@ -172,7 +155,7 @@ export default function App() {
     return (
         <div className="p-6">
             <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
-                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(e) => setPwl(e.target.checked)} />
+                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(checked) => setPwl(checked)} />
                 <PickAverageType value={averageType} onChange={(value) => setAverageType(value)} />
             </div>
 
