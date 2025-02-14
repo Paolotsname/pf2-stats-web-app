@@ -3,6 +3,7 @@ import "./index.css";
 import PlayerCard from "./components/PlayerCard";
 import EnemyCard from "./components/EnemyCard";
 import PickAverageType from "./components/PickAverageType";
+import PickShowType from "./components/PickShowType";
 import PWLCheckbox from "./components/PWLCheckbox";
 import classData from "./data/class_data.json";
 import enemyData from "./data/enemy_data.json";
@@ -95,6 +96,7 @@ export default function App() {
     const [players, setPlayers] = useState<(Player & PlayerStats)[]>([{ ...initialPlayer, ...calculatePlayerStats(initialPlayer, false) }]);
     const [enemies, setEnemies] = useState<Enemy[]>([getInitialEnemy(initialPlayer.playerLevel, "mean", false)]);
     const [averageType, setAverageType] = useState<string>("mean");
+    const [showType, setShowType] = useState<string>("1 player")
     const [proficiencyWithoutLevel, setPwl] = useState<boolean>(false);
 
     // Update player stats when `proficiencyWithoutLevel` changes
@@ -121,7 +123,18 @@ export default function App() {
     };
 
     const removePlayer = (index: number) => {
-        setPlayers((players) => players.filter((_, i) => i !== index));
+        if (players.length === 1) {
+            const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+            setPlayers([newPlayer]);
+        } else {
+            setPlayers((players) => players.filter((_, i) => i !== index))
+        }
+    };
+
+    const resetPlayer = () => {
+        const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+        const [, ...newArray] = players;
+        setPlayers([newPlayer, ...newArray]);
     };
 
     const updatePlayer = (index: number, updatedPlayer: Player) => {
@@ -141,7 +154,13 @@ export default function App() {
     };
 
     const removeEnemy = (index: number) => {
-        setEnemies((enemies) => enemies.filter((_, i) => i !== index));
+        if (enemies.length == 1) {
+            const firstPlayerLevel = players[0].playerLevel;
+            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
+            setEnemies([newEnemy]);
+        } else {
+            setEnemies((enemies) => enemies.filter((_, i) => i !== index));
+        }
     };
 
     const updateEnemy = (index: number, updatedEnemy: Enemy) => {
@@ -152,17 +171,41 @@ export default function App() {
         });
     };
 
-    return (
-        <div className="p-6">
-            <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
-                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(checked) => setPwl(checked)} />
-                <PickAverageType value={averageType} onChange={(value) => setAverageType(value)} />
-            </div>
-
+    let calculator;
+    if (showType === "1 player") {
+        calculator = (
             <div className="flex flex-col space-y-4">
-                <button onClick={addPlayer} className="bg-blue-500 text-white px-4 py-2 rounded">
-                    Add Player
-                </button>
+                <div className="flex flex-row space-x-4">
+                    <PlayerCard
+                        player={players[0]}
+                        onUpdate={(updatedPlayer) => updatePlayer(0, updatedPlayer)}
+                    />
+                    <button onClick={resetPlayer} className="bg-red-500 text-white px-4 py-2 rounded">
+                        Reset Player
+                    </button>
+                </div>
+                <div className="flex flex-col space-y-4 mt-8">
+
+                    {enemies.map((enemy, index) => (
+                        <div key={index} className="flex flex-row space-x-4">
+                            <EnemyCard
+                                enemy={enemy}
+                                onUpdate={(updatedEnemy) => updateEnemy(index, updatedEnemy)}
+                            />
+                            <button onClick={() => removeEnemy(index)} className="bg-red-500 text-white px-4 py-2 rounded">
+                                Remove Enemy
+                            </button>
+                        </div>
+                    ))}
+                    <button onClick={addEnemy} className="bg-blue-500 text-white px-4 py-2 rounded">
+                        Add Enemy
+                    </button>
+                </div>
+            </div>
+        );
+    } else if (showType === "x players") {
+        calculator = (
+            <div className="flex flex-col space-y-4">
 
                 {players.map((player, index) => (
                     <div key={index} className="flex flex-row space-x-4">
@@ -175,25 +218,31 @@ export default function App() {
                         </button>
                     </div>
                 ))}
-            </div>
-
-            <div className="flex flex-col space-y-4 mt-8">
-                <button onClick={addEnemy} className="bg-blue-500 text-white px-4 py-2 rounded">
-                    Add Enemy
+                <button onClick={addPlayer} className="bg-blue-500 text-white px-4 py-2 rounded">
+                    Add Player
                 </button>
-
-                {enemies.map((enemy, index) => (
-                    <div key={index} className="flex flex-row space-x-4">
+                <div className="flex flex-col space-y-4 mt-8">
+                    <div className="flex flex-row space-x-4">
                         <EnemyCard
-                            enemy={enemy}
-                            onUpdate={(updatedEnemy) => updateEnemy(index, updatedEnemy)}
+                            enemy={enemies[0]}
+                            onUpdate={(updatedEnemy) => updateEnemy(0, updatedEnemy)}
                         />
-                        <button onClick={() => removeEnemy(index)} className="bg-red-500 text-white px-4 py-2 rounded">
-                            Remove Enemy
-                        </button>
                     </div>
-                ))}
+                </div>
             </div>
+        );
+    } else if (showType === "simple calculator") {
+        calculator = <h1> :3 </h1>; // Add return statement
+    }
+
+    return (
+        <div className="p-6">
+            <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
+                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(checked) => setPwl(checked)} />
+                <PickAverageType value={averageType} onChange={(value) => setAverageType(value)} />
+                <PickShowType value={showType} onChange={(value) => setShowType(value)} />
+            </div>
+            {calculator}
         </div>
     );
 }
