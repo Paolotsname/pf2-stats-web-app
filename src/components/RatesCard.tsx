@@ -137,9 +137,9 @@ function getStrikeRates(
 }
 
 const RatesCard = ({ player, enemy }: RatesCardProps) => {
-    const weapon_map0 = getStrikeRates(player.weaponStrike0, enemy.ac)
-    const weapon_map1 = getStrikeRates(player.weaponStrike1, enemy.ac)
-    const weapon_map2 = getStrikeRates(player.weaponStrike2, enemy.ac)
+    const weapon_map0 = getD20Rates(player.weaponStrike0, enemy.ac)
+    const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac)
+    const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac)
     /*    const spell_that_target_ac_rates = getStrikeRates(player.
             const save_against_spell_that_target_fort = getStrikeRates(player.
             const save_against_spell_that_target_reflex = getStrikeRates(player.
@@ -150,7 +150,25 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
             const spell_that_target_reflex_save_rates = getStrikeRates(player.
             const spell_that_target_will_save_rates = getStrikeRates(player. */
 
-    return <h1> {weapon_map0, weapon_map1, weapon_map2} </h1>
+    return (
+        <div>
+            <h1>
+                {weapon_map0.map((value, index) => (
+                    <span key={index}>{value} </span>
+                ))}
+            </h1>
+            <h1>
+                {weapon_map1.map((value, index) => (
+                    <span key={index}>{value} </span>
+                ))}
+            </h1>
+            <h1>
+                {weapon_map2.map((value, index) => (
+                    <span key={index}>{value} </span>
+                ))}
+            </h1>
+        </div>
+    )
 };
 
 export default RatesCard;
