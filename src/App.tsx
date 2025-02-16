@@ -8,28 +8,7 @@ import PickShowType from "./components/PickShowType";
 import PWLCheckbox from "./components/PWLCheckbox";
 import classData from "./data/class_data.json";
 import enemyData from "./data/enemy_data.json";
-
-interface Player {
-    playerClass: string;
-    playerLevel: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-}
-
-interface PlayerStats {
-    weaponStrike0: number;
-    weaponStrike1: number;
-    weaponStrike2: number;
-    spellAttack: number;
-    armorClass: number;
-    fortitude: number;
-    reflex: number;
-    will: number;
-}
+import { Player, PlayerStats, Enemy } from "./interfaces";
 
 const initialPlayer: Player = {
     playerClass: "Alchemist",
@@ -42,57 +21,23 @@ const initialPlayer: Player = {
     charisma: 0,
 };
 
-interface Enemy {
-    level: number;
-    hp: number;
-    ac: number;
-    fort: number;
-    refl: number;
-    will: number;
-    attack_bonus: number;
-    spell_dc: number;
-    spell_attack_bonus: number;
-}
-
-interface Rates {
-    weapon_map0: number;
-    weapon_map1: number;
-    weapon_map2: number;
-    spell_that_target_ac_rates: number;
-    save_against_spell_that_target_fort: number;
-    save_against_spell_that_target_reflex: number;
-    save_against_spell_that_target_will: number;
-    striked_rates: number;
-    spell_striked_rates: number;
-    spell_that_target_fort_save_rates: number;
-    spell_that_target_reflex_save_rates: number;
-    spell_that_target_will_save_rates: number;
-}
-
-const initialRates: Rates = {
-    weapon_map0: 0,
-    weapon_map1: 0,
-    weapon_map2: 0,
-    spell_that_target_ac_rates: 0,
-    save_against_spell_that_target_fort: 0,
-    save_against_spell_that_target_reflex: 0,
-    save_against_spell_that_target_will: 0,
-    striked_rates: 0,
-    spell_striked_rates: 0,
-    spell_that_target_fort_save_rates: 0,
-    spell_that_target_reflex_save_rates: 0,
-    spell_that_target_will_save_rates: 0,
-}
-
 const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean): Enemy => {
     return getEnemyStats(playerLevel, averageType, pwl);
 };
 
 const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
-    const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma } = player;
-    const proficiencies = classData[playerClass][playerLevel - 1];
+    const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma, } = player;
+    const proficiencies = classData[playerClass]["proficiencies"][playerLevel - 1];
+    const saveSpecializations = classData[playerClass]["saveSpecialization"]
 
     const levelBonus = pwl ? 0 : playerLevel;
+
+    // Helper function to calculate save specialization level
+    const calculateSaveLevel = (level: number, [threshold1, threshold2]: [number, number]): number => {
+        if (level >= threshold2) return 2;
+        if (level >= threshold1) return 1;
+        return 0;
+    };
 
     return {
         weaponStrike0: proficiencies[0] + strength + levelBonus,
@@ -103,6 +48,11 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
         fortitude: proficiencies[3] + constitution + levelBonus,
         reflex: proficiencies[4] + dexterity + levelBonus,
         will: proficiencies[5] + wisdom + levelBonus,
+        saveSpecializationsLevels: {
+            fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"]),
+            refl: calculateSaveLevel(playerLevel, saveSpecializations["refl"]),
+            will: calculateSaveLevel(playerLevel, saveSpecializations["will"]),
+        },
     };
 };
 
@@ -128,7 +78,7 @@ export default function App() {
     const [enemies, setEnemies] = useState<Enemy[]>([getInitialEnemy(initialPlayer.playerLevel, "mean", false)]);
     const [averageType, setAverageType] = useState<string>("mean");
     const [showType, setShowType] = useState<string>("1 player")
-    const [proficiencyWithoutLevel, setPwl] = useState<boolean>(false);
+    const [proficiencyWithoutLevel, setProficiencyWithoutLevel] = useState<boolean>(false);
 
     // Update player stats when `proficiencyWithoutLevel` changes
     useEffect(() => {
@@ -211,23 +161,6 @@ export default function App() {
             return newEnemies;
         });
     };
-    /*
-        const addRates = () => {
-            const newRates = initialRates;
-            setRates((rates) => [...rates, newRates]);
-        };
-
-        const removeRates = (index: number) => {
-            setRates((rates) => rates.filter((_, i) => i !== index))
-        };
-    const updateRates = (index: number, updatedRates: Rates) => {
-        setRates((rates) => {
-            const newRates = [...rates];
-            newRates[index] = updatedRates;
-            return newRates
-        })
-    }
-    */
 
     let calculator;
     if (showType === "1 player") {
@@ -332,7 +265,7 @@ export default function App() {
     return (
         <div className="p-6">
             <div className="flex bg-white shadow-md rounded-lg p-6 mb-6">
-                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(checked) => setPwl(checked)} />
+                <PWLCheckbox bool={proficiencyWithoutLevel} onChange={(checked) => setProficiencyWithoutLevel(checked)} />
                 <PickAverageType value={averageType} onChange={(value) => setAverageType(value)} />
                 <PickShowType value={showType} onChange={(value) => setShowType(value)} />
             </div>

@@ -1,39 +1,8 @@
 import React, { ChangeEvent } from "react";
-import classData from "../data/class_data.json";
-
-interface Player {
-    playerClass: string;
-    playerLevel: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-    weaponStrike0: number;
-    weaponStrike1: number;
-    weaponStrike2: number;
-    spellAttack: number;
-    armorClass: number;
-    fortitude: number;
-    reflex: number;
-    will: number;
-}
-
-interface Enemy {
-    level: number;
-    hp: number;
-    ac: number;
-    fort: number;
-    refl: number;
-    will: number;
-    attack_bonus: number;
-    spell_dc: number;
-    spell_attack_bonus: number;
-}
+import { Player, PlayerStats, Enemy } from "../interfaces";
 
 interface RatesCardProps {
-    player: Player;
+    player: Player & PlayerStats;
     enemy: Enemy;
 }
 
@@ -114,10 +83,10 @@ function getD20Rates(proficiency: number | null, target: number | null): [number
 
 function getSaveRates(prof: number, target: number, profLevel: number): [number, number, number, number] {
     let [cf, f, s, cs] = getD20Rates(prof, target);
-    if (profLevel >= 6) {
+    if (profLevel >= 1) {
         cs = s + cs;
         s = 0;
-        if (profLevel >= 8) {
+        if (profLevel >= 2) {
             f = cf + f;
             cf = 0;
         }
@@ -158,9 +127,9 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
     const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac);
     const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac);
     const spell_that_target_ac_rates = getD20Rates(player.spellAttack, enemy.ac);
-    const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc);
-    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc);
-    const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc);
+    const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc, player.saveSpecializationsLevels.fort);
+    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc, player.saveSpecializationsLevels.refl);
+    const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc, player.saveSpecializationsLevels.will);
 
     const enemy_strike_rates_map0 = getD20Rates(enemy.attack_bonus, player.armorClass);
     const enemy_strike_rates_map1 = getD20Rates(enemy.attack_bonus, player.armorClass);
