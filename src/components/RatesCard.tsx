@@ -125,50 +125,82 @@ function getSaveRates(prof: number, target: number, profLevel: number): [number,
     return [cf, f, s, cs];
 }
 
-function getStrikeRates(
-    prof: number,
-    target: number,
-    agile: number = 0
-): [[number, number, number, number], [number, number, number, number], [number, number, number, number]] {
-    let weaponRates0 = getD20Rates(prof, target);
-    let weaponRates1 = getD20Rates(prof - 5 + agile, target);
-    let weaponRates2 = getD20Rates(prof - 10 + (agile * 2), target);
-    return [weaponRates0, weaponRates1, weaponRates2];
-}
-
-const RatesCard = ({ player, enemy }: RatesCardProps) => {
-    const weapon_map0 = getD20Rates(player.weaponStrike0, enemy.ac)
-    const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac)
-    const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac)
-    /*    const spell_that_target_ac_rates = getStrikeRates(player.
-            const save_against_spell_that_target_fort = getStrikeRates(player.
-            const save_against_spell_that_target_reflex = getStrikeRates(player.
-            const save_against_spell_that_target_will = getStrikeRates(player.
-            const striked_rates = getStrikeRates(player.
-            const spell_striked_rates = getStrikeRates(player.
-            const spell_that_target_fort_save_rates = getStrikeRates(player.
-            const spell_that_target_reflex_save_rates = getStrikeRates(player.
-            const spell_that_target_will_save_rates = getStrikeRates(player. */
+const showRates = ({ array, isBad = false }: { array: [number, number, number, number]; isBad?: boolean }) => {
+    const colors = isBad
+        ? { critFail: "green", fail: "blue", success: "orange", critSuccess: "red" } // Bad rates color scheme
+        : { critFail: "red", fail: "orange", success: "blue", critSuccess: "green" }; // Good rates color scheme
 
     return (
-        <div>
-            <h1>
-                {weapon_map0.map((value, index) => (
-                    <span key={index}>{value} </span>
-                ))}
-            </h1>
-            <h1>
-                {weapon_map1.map((value, index) => (
-                    <span key={index}>{value} </span>
-                ))}
-            </h1>
-            <h1>
-                {weapon_map2.map((value, index) => (
-                    <span key={index}>{value} </span>
-                ))}
-            </h1>
+        <div className="flex flex-row gap-4">
+            <h1 style={{ color: colors.critFail }}>Crit Fail: {array[0]}%</h1>
+            <h1 style={{ color: colors.fail }}>Fail: {array[1]}%</h1>
+            <h1 style={{ color: colors.success }}>Success: {array[2]}%</h1>
+            <h1 style={{ color: colors.critSuccess }}>Crit Success: {array[3]}%</h1>
         </div>
-    )
+    );
+};
+
+interface RateCardProps {
+    title: string;
+    rates: [number, number, number, number];
+    isBad?: boolean;
+}
+
+const RateCard = ({ title, rates, isBad = false }: RateCardProps) => (
+    <div className="bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        {showRates({ array: rates, isBad })}
+    </div>
+);
+
+const RatesCard = ({ player, enemy }: RatesCardProps) => {
+    const weapon_map0 = getD20Rates(player.weaponStrike0, enemy.ac);
+    const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac);
+    const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac);
+    const spell_that_target_ac_rates = getD20Rates(player.spellAttack, enemy.ac);
+    const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc);
+    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc);
+    const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc);
+
+    const enemy_strike_rates_map0 = getD20Rates(enemy.attack_bonus, player.armorClass);
+    const enemy_strike_rates_map1 = getD20Rates(enemy.attack_bonus, player.armorClass);
+    const enemy_strike_rates_map2 = getD20Rates(enemy.attack_bonus, player.armorClass);
+    const spell_striked_rates = getD20Rates(player.armorClass, enemy.spell_attack_bonus);
+    const enemy_save_on_spell_that_target_fort_save_rates = getD20Rates(enemy.fort, player.spellAttack + 10);
+    const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.refl, player.spellAttack + 10);
+    const enemy_save_on_spell_that_target_will_save_rates = getD20Rates(enemy.will, player.spellAttack + 10);
+
+    return (
+        <div className="space-y-4">
+            {/* Player Weapon Strike Rates */}
+            <RateCard title="Player Weapon Strike Rates" rates={weapon_map0} />
+            <RateCard title="Player Weapon Strike (-5) Rates" rates={weapon_map1} />
+            <RateCard title="Player Weapon Strike (-10) Rates" rates={weapon_map2} />
+
+            {/* Player Spell Targeting AC Rates */}
+            <RateCard title="Player Spell Targeting AC Rates" rates={spell_that_target_ac_rates} />
+
+            {/* Enemy Save vs Player Spell Rates */}
+            <RateCard title="Player Fortitude Targeting Spell Rates" rates={enemy_save_on_spell_that_target_fort_save_rates} isBad />
+            <RateCard title="Player Reflex Targeting Spell Rates" rates={enemy_save_on_spell_that_target_reflex_save_rates} isBad />
+            <RateCard title="Player Will Targeting Spell Rates" rates={enemy_save_on_spell_that_target_will_save_rates} isBad />
+
+            {/* Enemy Weapon Strike Rates */}
+            <RateCard title="Enemy Weapon Strike Rates" rates={enemy_strike_rates_map0} isBad />
+            <RateCard title="Enemy Weapon Strike (-5) Rates" rates={enemy_strike_rates_map1} isBad />
+            <RateCard title="Enemy Weapon Strike (-10) Rates" rates={enemy_strike_rates_map2} isBad />
+
+            {/* Enemy Spell Targeting AC Rates */}
+            <RateCard title="Enemy Spell Targeting AC Rates" rates={spell_striked_rates} isBad />
+
+            {/* Player Save vs Enemy Spell Rates */}
+            <RateCard title="Enemy Fortitude Targeting Spell Rates" rates={player_save_against_spell_that_target_fort} />
+            <RateCard title="Enemy Reflex Targeting Spell Rates" rates={player_save_against_spell_that_target_reflex} />
+            <RateCard title="Enemy Will Targeting Spell Rates" rates={player_save_against_spell_that_target_will} />
+
+
+        </div>
+    );
 };
 
 export default RatesCard;

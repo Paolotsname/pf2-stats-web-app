@@ -68,7 +68,7 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
 
     const renderLevelInput = () => (
         <label className="block mb-4">
-            Player Level:
+            <strong>Player Level</strong>:
             <input
                 type="number"
                 min="1"
@@ -82,7 +82,7 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
 
     const renderAttributeInput = (label: string, field: keyof Player, value: number) => (
         <label className="block mb-4">
-            {label}:
+            <strong>{label}</strong>:
             <input
                 type="number"
                 min="-9"
