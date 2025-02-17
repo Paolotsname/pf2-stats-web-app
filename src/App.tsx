@@ -8,7 +8,7 @@ import PickShowType from "./components/PickShowType";
 import PWLCheckbox from "./components/PWLCheckbox";
 import classData from "./data/class_data.json";
 import enemyData from "./data/enemy_data.json";
-import { Player, PlayerStats, Enemy } from "./interfaces";
+import { Player, PlayerStats, PlayerStatsCombided, Enemy } from "./interfaces";
 
 const initialPlayer: Player = {
     playerClass: "Alchemist",
@@ -19,6 +19,11 @@ const initialPlayer: Player = {
     intelligence: 0,
     wisdom: 0,
     charisma: 0,
+    itemBonusWeapon: 0,
+    itemArmor: 0,
+    itemBonusArmor: 0,
+    itemBonusSaves: 0,
+    itemDexCap: 0,
 };
 
 const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean): Enemy => {
@@ -26,7 +31,7 @@ const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean)
 };
 
 const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
-    const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma, } = player;
+    const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma, itemBonusWeapon, itemArmor, itemBonusArmor, itemBonusSaves, itemDexCap } = player;
     const proficiencies = classData[playerClass]["proficiencies"][playerLevel - 1];
     const saveSpecializations = classData[playerClass]["saveSpecialization"]
 
@@ -40,14 +45,14 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
     };
 
     return {
-        weaponStrike0: proficiencies[0] + strength + levelBonus,
-        weaponStrike1: proficiencies[0] + strength - 5 + levelBonus,
-        weaponStrike2: proficiencies[0] + strength - 10 + levelBonus,
+        weaponStrike0: proficiencies[0] + strength + itemBonusWeapon + levelBonus,
+        weaponStrike1: proficiencies[0] + strength + itemBonusWeapon - 5 + levelBonus,
+        weaponStrike2: proficiencies[0] + strength + itemBonusWeapon - 10 + levelBonus,
         spellAttack: proficiencies[1] ? proficiencies[1] + charisma + levelBonus : 0,
-        armorClass: proficiencies[2] + 10 + dexterity + levelBonus,
-        fortitude: proficiencies[3] + constitution + levelBonus,
-        reflex: proficiencies[4] + dexterity + levelBonus,
-        will: proficiencies[5] + wisdom + levelBonus,
+        armorClass: proficiencies[2] + 10 + Math.min(dexterity, itemDexCap) + itemArmor + itemBonusArmor + levelBonus,
+        fortitude: proficiencies[3] + constitution + itemBonusSaves + levelBonus,
+        reflex: proficiencies[4] + dexterity + itemBonusSaves + levelBonus,
+        will: proficiencies[5] + wisdom + itemBonusSaves + levelBonus,
         saveSpecializationsLevels: {
             fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"]),
             refl: calculateSaveLevel(playerLevel, saveSpecializations["refl"]),
@@ -74,7 +79,7 @@ const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy 
 };
 
 export default function App() {
-    const [players, setPlayers] = useState<(Player & PlayerStats)[]>([{ ...initialPlayer, ...calculatePlayerStats(initialPlayer, false) }]);
+    const [players, setPlayers] = useState<(PlayerStatsCombided)[]>([{ ...initialPlayer, ...calculatePlayerStats(initialPlayer, false) }]);
     const [enemies, setEnemies] = useState<Enemy[]>([getInitialEnemy(initialPlayer.playerLevel, "mean", false)]);
     const [averageType, setAverageType] = useState<string>("mean");
     const [showType, setShowType] = useState<string>("1 player")

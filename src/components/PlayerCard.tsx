@@ -1,28 +1,10 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import classData from "../data/class_data.json";
-
-interface Player {
-    playerClass: string;
-    playerLevel: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-    weaponStrike0: number;
-    weaponStrike1: number;
-    weaponStrike2: number;
-    spellAttack: number;
-    armorClass: number;
-    fortitude: number;
-    reflex: number;
-    will: number;
-}
+import { PlayerStatsCombined } from "../interfaces";
 
 interface PlayerCardProps {
-    player: Player;
-    onUpdate: (updatedPlayer: Player) => void;
+    player: PlayerStatsCombined;
+    onUpdate: (updatedPlayer: PlayerStatsCombined) => void;
 }
 
 const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
@@ -35,6 +17,11 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
         intelligence,
         wisdom,
         charisma,
+        itemBonusWeapon,
+        itemArmor,
+        itemBonusArmor,
+        itemBonusSaves,
+        itemDexCap,
         weaponStrike0,
         weaponStrike1,
         weaponStrike2,
@@ -45,7 +32,7 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
         will,
     } = player;
 
-    const handleInputChange = (field: keyof Player, value: string | number) => {
+    const handleInputChange = (field: keyof PlayerStatsCombined, value: string | number) => {
         onUpdate({ ...player, [field]: value });
     };
 
@@ -71,8 +58,8 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
             <strong>Player Level</strong>:
             <input
                 type="number"
-                min="1"
-                max="20"
+                min="0"
+                max="10"
                 value={playerLevel}
                 onChange={(e) => handleInputChange("playerLevel", Number(e.target.value))}
                 className="ml-2 p-1 border rounded"
@@ -80,13 +67,27 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
         </label>
     );
 
-    const renderAttributeInput = (label: string, field: keyof Player, value: number) => (
+    const renderAttributeInput = (label: string, field: keyof PlayerStatsCombined, value: number) => (
         <label className="block mb-4">
             <strong>{label}</strong>:
             <input
                 type="number"
                 min="-9"
                 max="9"
+                value={value}
+                onChange={(e) => handleInputChange(field, Number(e.target.value))}
+                className="ml-2 p-1 border rounded"
+            />
+        </label>
+    );
+
+    const renderItemInput = (label: string, field: keyof PlayerStatsCombined, value: number) => (
+        <label className="block mb-4">
+            <strong>{label}</strong>:
+            <input
+                type="number"
+                min="1"
+                max="20"
                 value={value}
                 onChange={(e) => handleInputChange(field, Number(e.target.value))}
                 className="ml-2 p-1 border rounded"
@@ -105,6 +106,11 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
                 {renderAttributeInput("Intelligence", "intelligence", intelligence)}
                 {renderAttributeInput("Wisdom", "wisdom", wisdom)}
                 {renderAttributeInput("Charisma", "charisma", charisma)}
+                {renderItemInput("Item Bonus (Weapon)", "itemBonusWeapon", itemBonusWeapon)}
+                {renderItemInput("Armor", "itemArmor", itemArmor)}
+                {renderItemInput("Item Bonus (Armor)", "itemBonusArmor", itemBonusArmor)}
+                {renderItemInput("Item Bonus (Saves)", "itemBonusSaves", itemBonusSaves)}
+                {renderItemInput("Dex Cap", "itemDexCap", itemDexCap)}
             </div>
             <div className="flex-1">
                 <p><strong>Weapon Strike (1st):</strong> +{weaponStrike0}</p>

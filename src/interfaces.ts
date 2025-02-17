@@ -7,6 +7,11 @@ export interface Player {
     intelligence: number;
     wisdom: number;
     charisma: number;
+    itemBonusWeapon: number;
+    itemArmor: number;
+    itemBonusArmor: number;
+    itemBonusSaves: number;
+    itemDexCap: number;
 }
 
 export interface PlayerStats {
@@ -24,6 +29,8 @@ export interface PlayerStats {
         will: number;
     };
 }
+
+export type PlayerStatsCombided = Player & PlayerStats
 
 export interface Enemy {
     level: number;
