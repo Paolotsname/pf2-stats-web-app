@@ -5,9 +5,11 @@ import { PlayerStatsCombined } from "../interfaces";
 interface PlayerCardProps {
     player: PlayerStatsCombined;
     onUpdate: (updatedPlayer: PlayerStatsCombined) => void;
+    onReset: () => void; // Add onReset prop
+    onRemove: () => void; // Add onRemove prop
 }
 
-const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
+const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) => {
     const {
         playerClass,
         playerLevel,
@@ -96,7 +98,21 @@ const PlayerCard = ({ player, onUpdate }: PlayerCardProps) => {
     );
 
     return (
-        <div className="flex flex-col md:flex-row bg-white shadow-md rounded-lg p-6 space-y-4 md:space-y-0 md:space-x-6">
+        <div className="flex flex-col md:flex-row bg-white rounded-lg p-6 space-y-4 md:space-y-0 md:space-x-6">
+            <div className="flex flex-col space-y-2">
+                <button
+                    onClick={onReset}
+                    className="bg-orange-500 text-white px-4 py-2 rounded"
+                >
+                    Reset Player
+                </button>
+                <button
+                    onClick={onRemove}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                >
+                    Remove Player
+                </button>
+            </div>
             <div className="flex-1">
                 {renderClassInput()}
                 {renderLevelInput()}

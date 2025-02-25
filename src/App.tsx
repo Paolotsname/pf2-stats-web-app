@@ -149,37 +149,20 @@ export default function App() {
         }
     };
 
-    const removeEnemy = (index: number) => {
-        if (enemies.length == 1) {
-            const firstPlayerLevel = players[0].playerLevel;
-            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
-            setEnemies([newEnemy]);
-        } else {
-            setEnemies((enemies) => enemies.filter((_, i) => i !== index));
-        }
-    };
-
-    const updateEnemy = (index: number, updatedEnemy: Enemy) => {
-        setEnemies((enemies) => {
-            const newEnemies = [...enemies];
-            newEnemies[index] = updatedEnemy;
-            return newEnemies;
-        });
+    const handleRemoveEnemy = (index: number) => {
+        setEnemies((prevEnemies) => prevEnemies.filter((_, i) => i !== index));
     };
 
     let calculator;
     if (showType === "1 player") {
         calculator = (
-            <div className="flex flex-row space-x-4 items-start"> {/* Updated to space-x-4 and items-start */}
+            <div className="flex flex-row space-x-4 items-start">
                 <div id="singlePlayer" className="flex flex-row space-x-1 border-2 border-gray-500 p-2 rounded-lg">
-                    <div className="flex flex-col space-y-1">
-                        <button onClick={() => resetPlayer(0)} className="bg-orange-500 text-white px-4 py-2 rounded w-32">
-                            Reset Player
-                        </button>
-                    </div>
                     <PlayerCard
                         player={players[0]}
                         onUpdate={(updatedPlayer) => updatePlayer(0, updatedPlayer)}
+                        onReset={() => resetPlayer(0)} // Pass onReset
+                        onRemove={() => removePlayer(0)} // Pass onRemove
                     />
                 </div>
                 <div className="flex flex-col space-y-4">
@@ -194,21 +177,12 @@ export default function App() {
                 </div>
                 <div id="enemyList" className="flex flex-col space-y-4">
                     {enemies.map((enemy, index) => (
-                        <div key={index} className="flex border-2 border-gray-500 p-2 rounded-lg">
-                            <div id="enemyCard" className="flex flex-row space-x-1">
-                                <EnemyCard
-                                    enemy={enemy}
-                                    onUpdate={(updatedEnemy) => updateEnemy(index, updatedEnemy)}
-                                />
-                                <div className="flex flex-col space-y-1">
-                                    <button
-                                        onClick={() => removeEnemy(index)}
-                                        className="bg-red-500 text-white px-4 py-2 rounded"
-                                    >
-                                        Remove Enemy
-                                    </button>
-                                </div>
-                            </div>
+                        <div key={index} className="flex p-2 rounded-lg">
+                            <EnemyCard
+                                enemy={enemy}
+                                onRemove={() => handleRemoveEnemy(index)}
+                                isEnabled={false}
+                            />
                         </div>
                     ))}
                     <button onClick={addEnemy} className="bg-blue-500 text-white px-4 py-2 rounded">
@@ -219,24 +193,16 @@ export default function App() {
         );
     } else if (showType === "x players") {
         calculator = (
-            <div className="flex flex-row space-x-4 items-start"> {/* Updated to space-x-4 and items-start */}
+            <div className="flex flex-row space-x-4 items-start">
                 <div id="playerList" className="flex flex-col space-y-4">
                     {players.map((player, index) => (
                         <div key={index} className="flex border-2 border-gray-500 p-2 rounded-lg">
-                            <div id="playerCard" className="flex flex-row space-x-1">
-                                <div className="flex flex-col space-y-1 w-32">
-                                    <button onClick={() => resetPlayer(index)} className="bg-orange-500 text-white px-4 py-2 rounded w-full">
-                                        Reset Player
-                                    </button>
-                                    <button onClick={() => removePlayer(index)} className="bg-red-500 text-white px-4 py-2 rounded w-full">
-                                        Remove Player
-                                    </button>
-                                </div>
-                                <PlayerCard
-                                    player={player}
-                                    onUpdate={(updatedPlayer) => updatePlayer(index, updatedPlayer)}
-                                />
-                            </div>
+                            <PlayerCard
+                                player={player}
+                                onUpdate={(updatedPlayer) => updatePlayer(index, updatedPlayer)}
+                                onReset={() => resetPlayer(index)} // Pass onReset
+                                onRemove={() => removePlayer(index)} // Pass onRemove
+                            />
                         </div>
                     ))}
                     <button onClick={addPlayer} className="bg-blue-500 text-white px-4 py-2 rounded">
@@ -254,12 +220,11 @@ export default function App() {
                     ))}
                 </div>
                 <div className="flex flex-col space-y-4">
-                    <div className="flex border-2 border-gray-500 p-2 rounded-lg">
-                        <EnemyCard
-                            enemy={enemies[0]}
-                            onUpdate={(updatedEnemy) => updateEnemy(0, updatedEnemy)}
-                        />
-                    </div>
+                    <EnemyCard
+                        enemy={enemies[0]}
+                        onRemove={() => handleRemoveEnemy(0)}
+                        isEnabled={true}
+                    />
                 </div>
             </div>
         );
