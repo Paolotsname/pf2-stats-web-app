@@ -5,7 +5,7 @@ interface Enemy {
     hp: number;
     ac: number;
     fort: number;
-    refl: number;
+    reflex: number;
     will: number;
     attack_bonus: number;
     spell_dc: number;
@@ -19,7 +19,7 @@ interface EnemyCardProps {
 }
 
 const EnemyCard = ({ enemy, isEnabled, onRemove }: EnemyCardProps) => {
-    const { level, hp, ac, fort, refl, will, attack_bonus, spell_dc, spell_attack_bonus } = enemy;
+    const { level, hp, ac, fort, reflex, will, attack_bonus, spell_dc, spell_attack_bonus } = enemy;
 
     // Map the color prop to valid Tailwind CSS classes
     const buttonColorClass = isEnabled
@@ -33,7 +33,7 @@ const EnemyCard = ({ enemy, isEnabled, onRemove }: EnemyCardProps) => {
                 <p><strong>HP:</strong> {hp}</p>
                 <p><strong>Armor Class:</strong> {ac}</p>
                 <p><strong>Fortitude:</strong> +{fort}</p>
-                <p><strong>Reflex:</strong> +{refl}</p>
+                <p><strong>Reflex:</strong> +{reflex}</p>
                 <p><strong>Will:</strong> +{will}</p>
                 <p><strong>Attack Bonus:</strong> +{attack_bonus}</p>
                 <p><strong>Spell DC:</strong> {spell_dc}</p>

@@ -55,7 +55,7 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
         will: proficiencies[5] + wisdom + itemBonusSaves + levelBonus,
         saveSpecializationsLevels: {
             fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"]),
-            refl: calculateSaveLevel(playerLevel, saveSpecializations["refl"]),
+            reflex: calculateSaveLevel(playerLevel, saveSpecializations["reflex"]),
             will: calculateSaveLevel(playerLevel, saveSpecializations["will"]),
         },
     };
@@ -70,7 +70,7 @@ const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy 
         hp: data.hp,
         ac: data.ac,
         fort: data.fort,
-        refl: data.refl,
+        reflex: data.reflex,
         will: data.will,
         attack_bonus: data.attack_bonus,
         spell_dc: data.spell_dc,

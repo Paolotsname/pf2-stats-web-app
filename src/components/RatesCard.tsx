@@ -128,7 +128,7 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
     const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac);
     const spell_that_target_ac_rates = getD20Rates(player.spellAttack, enemy.ac);
     const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc, player.saveSpecializationsLevels.fort);
-    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc, player.saveSpecializationsLevels.refl);
+    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc, player.saveSpecializationsLevels.reflex);
     const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc, player.saveSpecializationsLevels.will);
 
     const enemy_strike_rates_map0 = getD20Rates(enemy.attack_bonus, player.armorClass);
@@ -136,7 +136,7 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
     const enemy_strike_rates_map2 = getD20Rates(enemy.attack_bonus, player.armorClass);
     const spell_striked_rates = getD20Rates(player.armorClass, enemy.spell_attack_bonus);
     const enemy_save_on_spell_that_target_fort_save_rates = getD20Rates(enemy.fort, player.spellAttack + 10);
-    const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.refl, player.spellAttack + 10);
+    const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.reflex, player.spellAttack + 10);
     const enemy_save_on_spell_that_target_will_save_rates = getD20Rates(enemy.will, player.spellAttack + 10);
 
     return (
