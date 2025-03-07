@@ -60,7 +60,7 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
             <strong>Player Level</strong>:
             <input
                 type="number"
-                min="0"
+                min="1"
                 max="20"
                 value={playerLevel}
                 onChange={(e) => handleInputChange("playerLevel", Number(e.target.value))}
