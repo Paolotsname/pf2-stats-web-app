@@ -94,32 +94,30 @@ function getSaveRates(prof: number, target: number, profLevel: number): [number,
     return [cf, f, s, cs];
 }
 
-const showRates = ({ array, isBad = false }: { array: [number, number, number, number]; isBad?: boolean }) => {
-    const colors = isBad
-        ? { critFail: "green", fail: "blue", success: "orange", critSuccess: "red" } // Bad rates color scheme
-        : { critFail: "red", fail: "orange", success: "blue", critSuccess: "green" }; // Good rates color scheme
-
-    return (
-        <div className="flex flex-row gap-4">
-            <h1 style={{ color: colors.critFail }}>Crit Fail: {array[0]}%</h1>
-            <h1 style={{ color: colors.fail }}>Fail: {array[1]}%</h1>
-            <h1 style={{ color: colors.success }}>Success: {array[2]}%</h1>
-            <h1 style={{ color: colors.critSuccess }}>Crit Success: {array[3]}%</h1>
-        </div>
-    );
-};
-
-interface RateCardProps {
+interface LineProps {
     title: string;
     rates: [number, number, number, number];
-    isBad?: boolean;
+    isEven: boolean; // New prop to determine if the row is even or odd
 }
 
-const RateCard = ({ title, rates, isBad = false }: RateCardProps) => (
-    <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        {showRates({ array: rates, isBad })}
-    </div>
+const PositiveLine = ({ title, rates, isEven }: LineProps) => (
+    <tr className={`${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition-colors border-b border-gray-200`}>
+        <td className="border-r border-gray-300 px-4 py-3 text-blue-900">{title}</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-red-500">{rates[0]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-orange-500">{rates[1]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-green-500">{rates[2]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-blue-500">{rates[3]}%</td>
+    </tr>
+);
+
+const NegativeLine = ({ title, rates, isEven }: LineProps) => (
+    <tr className={`${isEven ? 'bg-red-50' : 'bg-white'} hover:bg-red-100 transition-colors border-b border-gray-200`}>
+        <td className="border-r border-gray-300 px-4 py-3 text-red-900">{title}</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-blue-500">{rates[0]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-green-500">{rates[1]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-orange-500">{rates[2]}%</td>
+        <td className="border-r border-gray-300 px-4 py-3 text-red-500">{rates[3]}%</td>
+    </tr>
 );
 
 const RatesCard = ({ player, enemy }: RatesCardProps) => {
@@ -139,35 +137,62 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
     const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.reflex, player.spellAttack + 10);
     const enemy_save_on_spell_that_target_will_save_rates = getD20Rates(enemy.will, player.spellAttack + 10);
 
+    const player_rates = [
+        { title: "Weapon Strike 1", rates: weapon_map0 },
+        { title: "Weapon Strike 2", rates: weapon_map1 },
+        { title: "Weapon Strike 3", rates: weapon_map2 },
+        { title: "Spell Attack", rates: spell_that_target_ac_rates },
+        { title: "Fortitude Save", rates: player_save_against_spell_that_target_fort },
+        { title: "Reflex Save", rates: player_save_against_spell_that_target_reflex },
+        { title: "Will Save", rates: player_save_against_spell_that_target_will },
+    ];
+    const enemy_rates = [
+        { title: "Enemy Strike 1", rates: enemy_strike_rates_map0 },
+        { title: "Enemy Strike 2", rates: enemy_strike_rates_map1 },
+        { title: "Enemy Strike 3", rates: enemy_strike_rates_map2 },
+        { title: "Spell Striked", rates: spell_striked_rates },
+        { title: "Enemy Fort Save", rates: enemy_save_on_spell_that_target_fort_save_rates },
+        { title: "Enemy Reflex Save", rates: enemy_save_on_spell_that_target_reflex_save_rates },
+        { title: "Enemy Will Save", rates: enemy_save_on_spell_that_target_will_save_rates },
+    ];
+
     return (
-        <div className="space-y-4">
-            {/* Player Weapon Strike Rates */}
-            <RateCard title="Player Weapon Strike Rates" rates={weapon_map0} />
-            <RateCard title="Player Weapon Strike (-5) Rates" rates={weapon_map1} />
-            <RateCard title="Player Weapon Strike (-10) Rates" rates={weapon_map2} />
+        <div className="space-y-8 p-4 bg-gray-50 rounded-lg shadow-md">
+            {/* Player Rolls Table */}
+            <table className="table-auto border border-gray-300 w-full bg-white rounded-lg overflow-hidden shadow-sm">
+                <thead className="bg-blue-200">
+                    <tr>
+                        <th className="border-r border-gray-300 px-4 py-3 text-left text-blue-900 font-semibold">Player Rolls</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-blue-900 font-semibold">Critical Fail</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-blue-900 font-semibold">Fail</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-blue-900 font-semibold">Success</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-blue-900 font-semibold">Critical Success</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {player_rates.map((rate, index) => (
+                        <PositiveLine key={index} title={rate.title} rates={rate.rates} isEven={index % 2 === 0} />
+                    ))}
+                </tbody>
+            </table>
 
-            {/* Player Spell Targeting AC Rates */}
-            <RateCard title="Player Spell Targeting AC Rates" rates={spell_that_target_ac_rates} />
-
-            {/* Enemy Save vs Player Spell Rates */}
-            <RateCard title="Player Fortitude Targeting Spell Rates" rates={enemy_save_on_spell_that_target_fort_save_rates} isBad />
-            <RateCard title="Player Reflex Targeting Spell Rates" rates={enemy_save_on_spell_that_target_reflex_save_rates} isBad />
-            <RateCard title="Player Will Targeting Spell Rates" rates={enemy_save_on_spell_that_target_will_save_rates} isBad />
-
-            {/* Enemy Weapon Strike Rates */}
-            <RateCard title="Enemy Weapon Strike Rates" rates={enemy_strike_rates_map0} isBad />
-            <RateCard title="Enemy Weapon Strike (-5) Rates" rates={enemy_strike_rates_map1} isBad />
-            <RateCard title="Enemy Weapon Strike (-10) Rates" rates={enemy_strike_rates_map2} isBad />
-
-            {/* Enemy Spell Targeting AC Rates */}
-            <RateCard title="Enemy Spell Targeting AC Rates" rates={spell_striked_rates} isBad />
-
-            {/* Player Save vs Enemy Spell Rates */}
-            <RateCard title="Enemy Fortitude Targeting Spell Rates" rates={player_save_against_spell_that_target_fort} />
-            <RateCard title="Enemy Reflex Targeting Spell Rates" rates={player_save_against_spell_that_target_reflex} />
-            <RateCard title="Enemy Will Targeting Spell Rates" rates={player_save_against_spell_that_target_will} />
-
-
+            {/* Enemy Rolls Table */}
+            <table className="table-auto border border-gray-300 w-full bg-white rounded-lg overflow-hidden shadow-sm">
+                <thead className="bg-red-200">
+                    <tr>
+                        <th className="border-r border-gray-300 px-4 py-3 text-left text-red-900 font-semibold">Enemy Rolls</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-red-900 font-semibold">Critical Fail</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-red-900 font-semibold">Fail</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-red-900 font-semibold">Success</th>
+                        <th className="border-r border-gray-300 px-4 py-3 text-red-900 font-semibold">Critical Success</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {enemy_rates.map((rate, index) => (
+                        <NegativeLine key={index} title={rate.title} rates={rate.rates} isEven={index % 2 === 0} />
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
