@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import { Player, PlayerStats, Enemy } from "../interfaces";
 
 interface RatesCardProps {
@@ -16,40 +16,49 @@ function clamp(minValue: number, n: number, maxValue: number): number {
     }
 }
 
-function getD20Rates(proficiency: number | null, target: number | null): [number, number, number, number] {
+type Vantage = "normal" | "advantage" | "disadvantage";
+
+function getD20Rates(
+    proficiency: number | null,
+    target: number | null,
+    vantage: Vantage = "normal"
+): [number, number, number, number] {
     if (proficiency === null || target === null) {
-        console.log("enemy has null value");
         return [0, 0, 0, 0];
     }
 
     let diceFacesUsed = 0;
 
+    // Calculate minimum number on dice needed for a crit
     let minToCrit = (target + 10) - proficiency;
     let sidesThatCritHit = 19 - (minToCrit - 1);
     sidesThatCritHit = clamp(0, sidesThatCritHit, 18);
     diceFacesUsed += sidesThatCritHit;
 
+    // Calculate minimum number on dice needed for a normal hit
     let minToHit = target - proficiency;
     let sidesThatHit = 19 - (minToHit - 1) - diceFacesUsed;
     sidesThatHit = clamp(0, sidesThatHit, 18 - diceFacesUsed);
     diceFacesUsed += sidesThatHit;
 
+    // Calculate minimum number on dice needed for a failure
     let minToFail = (target - 9) - proficiency;
     let sidesThatFail = 19 - (minToFail - 1) - diceFacesUsed;
     sidesThatFail = clamp(0, sidesThatFail, 18 - diceFacesUsed);
     diceFacesUsed += sidesThatFail;
 
+    // Calculate sides that crit fail (leftover faces)
     let sidesThatCritFail = 18 - diceFacesUsed;
 
-    // Nat 20
-    let Nat20Value = proficiency + 20;
-    if (Nat20Value > target - 1) {
-        let percentageThatCritHit = Nat20Value - (target - 1);
+    // Handle Nat 20
+    let nat20Value = proficiency + 20;
+    if (nat20Value > target - 1) {
+        let percentageThatCritHit = nat20Value - (target - 1);
         percentageThatCritHit = clamp(0, percentageThatCritHit, 1);
         sidesThatCritHit += percentageThatCritHit;
         sidesThatHit += 1 - percentageThatCritHit;
-    } else if (Nat20Value > (target - 1) - 9) {
-        let percentageThatHit = Nat20Value - (target - 1) + 9;
+    } else if (nat20Value > (target - 1) - 9) {
+        let percentageThatHit = nat20Value - (target - 1) + 9;
         percentageThatHit = clamp(0, percentageThatHit, 1);
         sidesThatHit += percentageThatHit;
         sidesThatFail += 1 - percentageThatHit;
@@ -57,20 +66,49 @@ function getD20Rates(proficiency: number | null, target: number | null): [number
         sidesThatFail += 1;
     }
 
-    // Nat 1
-    let Nat1Value = proficiency + 1;
-    if (Nat1Value > (target - 1) + 10) {
-        let percentageThatHit = Nat1Value - (target - 1) - 9;
+    // Handle Nat 1
+    let nat1Value = proficiency + 1;
+    if (nat1Value > (target - 1) + 10) {
+        let percentageThatHit = nat1Value - (target - 1) - 9;
         percentageThatHit = clamp(0, percentageThatHit, 1);
         sidesThatCritHit += percentageThatHit;
         sidesThatHit += 1 - percentageThatHit;
-    } else if (Nat1Value > (target - 1)) {
-        let percentageThatFail = Nat1Value - (target - 1);
+    } else if (nat1Value > (target - 1)) {
+        let percentageThatFail = nat1Value - (target - 1);
         percentageThatFail = clamp(0, percentageThatFail, 1);
         sidesThatFail += percentageThatFail;
         sidesThatCritFail += 1 - percentageThatFail;
     } else {
         sidesThatCritFail += 1;
+    }
+
+    // Apply vantage (advantage or disadvantage)
+    if (vantage === "advantage") {
+        [sidesThatCritFail, sidesThatFail, sidesThatHit, sidesThatCritHit] = advantagize([
+            sidesThatCritFail / 20,
+            sidesThatFail / 20,
+            sidesThatHit / 20,
+            sidesThatCritHit / 20,
+        ]);
+        return [
+            Math.round(sidesThatCritFail * 100 * 100) / 100,
+            Math.round(sidesThatFail * 100 * 100) / 100,
+            Math.round(sidesThatHit * 100 * 100) / 100,
+            Math.round(sidesThatCritHit * 100 * 100) / 100,
+        ];
+    } else if (vantage === "disadvantage") {
+        [sidesThatCritFail, sidesThatFail, sidesThatHit, sidesThatCritHit] = disadvantagize([
+            sidesThatCritFail / 20,
+            sidesThatFail / 20,
+            sidesThatHit / 20,
+            sidesThatCritHit / 20,
+        ]);
+        return [
+            Math.round(sidesThatCritFail * 100 * 100) / 100,
+            Math.round(sidesThatFail * 100 * 100) / 100,
+            Math.round(sidesThatHit * 100 * 100) / 100,
+            Math.round(sidesThatCritHit * 100 * 100) / 100,
+        ];
     }
 
     return [
@@ -81,8 +119,13 @@ function getD20Rates(proficiency: number | null, target: number | null): [number
     ];
 }
 
-function getSaveRates(prof: number, target: number, profLevel: number): [number, number, number, number] {
-    let [cf, f, s, cs] = getD20Rates(prof, target);
+function getSaveRates(
+    prof: number,
+    target: number,
+    profLevel: number,
+    vantage: Vantage = "normal"
+): [number, number, number, number] {
+    let [cf, f, s, cs] = getD20Rates(prof, target, vantage);
     if (profLevel >= 1) {
         cs = s + cs;
         s = 0;
@@ -92,6 +135,26 @@ function getSaveRates(prof: number, target: number, profLevel: number): [number,
         }
     }
     return [cf, f, s, cs];
+}
+
+function advantagize(a: number[]): number[] {
+    let answer = [0, 0, 0, 0];
+    for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < a.length; j++) {
+            answer[Math.max(i, j)] += a[i] * a[j];
+        }
+    }
+    return answer.map((x) => Math.round(x * 100000) / 100000);
+}
+
+function disadvantagize(a: number[]): number[] {
+    let answer = [0, 0, 0, 0];
+    for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < a.length; j++) {
+            answer[Math.min(i, j)] += a[i] * a[j];
+        }
+    }
+    return answer.map((x) => Math.round(x * 100000) / 100000);
 }
 
 interface LineProps {

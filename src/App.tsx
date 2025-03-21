@@ -63,7 +63,7 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
 
 const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy => {
     const realAverageType = pwl ? averageType + "_pwl" : averageType
-    const data = enemyData[level + 1][realAverageType];
+    const data = enemyData[String(level)][realAverageType];
 
     return {
         level: level,

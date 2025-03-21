@@ -1,10 +1,10 @@
 import React from "react";
 import classData from "../data/class_data.json";
-import { PlayerStatsCombined } from "../interfaces";
+import { PlayerStatsCombided } from "../interfaces";
 
 interface PlayerCardProps {
-    player: PlayerStatsCombined;
-    onUpdate: (updatedPlayer: PlayerStatsCombined) => void;
+    player: PlayerStatsCombided;
+    onUpdate: (updatedPlayer: PlayerStatsCombided) => void;
     onReset: () => void; // Add onReset prop
     onRemove: () => void; // Add onRemove prop
 }
@@ -34,7 +34,7 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
         will,
     } = player;
 
-    const handleInputChange = (field: keyof PlayerStatsCombined, value: string | number) => {
+    const handleInputChange = (field: keyof PlayerStatsCombided, value: string | number) => {
         onUpdate({ ...player, [field]: value });
     };
 
@@ -69,7 +69,7 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
         </label>
     );
 
-    const renderAttributeInput = (label: string, field: keyof PlayerStatsCombined, value: number) => (
+    const renderAttributeInput = (label: string, field: keyof PlayerStatsCombided, value: number) => (
         <label className="block mb-4">
             <strong>{label}</strong>:
             <input
@@ -83,7 +83,7 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
         </label>
     );
 
-    const renderItemInput = (label: string, field: keyof PlayerStatsCombined, value: number) => (
+    const renderItemInput = (label: string, field: keyof PlayerStatsCombided, value: number) => (
         <label className="block mb-4">
             <strong>{label}</strong>:
             <input

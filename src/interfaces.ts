@@ -25,7 +25,7 @@ export interface PlayerStats {
     will: number;
     saveSpecializationsLevels: {
         fort: number;
-        refl: number;
+        reflex: number;
         will: number;
     };
 }
@@ -37,7 +37,7 @@ export interface Enemy {
     hp: number;
     ac: number;
     fort: number;
-    refl: number;
+    reflex: number;
     will: number;
     attack_bonus: number;
     spell_dc: number;
