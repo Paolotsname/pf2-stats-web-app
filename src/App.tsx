@@ -32,8 +32,9 @@ const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean)
 
 const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
     const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma, itemBonusWeapon, itemArmor, itemBonusArmor, itemBonusSaves, itemDexCap } = player;
-    const proficiencies = classData[playerClass]["proficiencies"][playerLevel - 1];
-    const saveSpecializations = classData[playerClass]["saveSpecialization"]
+    const key = playerClass;
+    const proficiencies = classData[key as keyof typeof classData]["proficiencies"][playerLevel - 1];
+    const saveSpecializations = classData[key as keyof typeof classData]["saveSpecialization"]
 
     const levelBonus = pwl ? 0 : playerLevel;
 
@@ -53,10 +54,11 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
         fortitude: proficiencies[3] + constitution + itemBonusSaves + levelBonus,
         reflex: proficiencies[4] + dexterity + itemBonusSaves + levelBonus,
         will: proficiencies[5] + wisdom + itemBonusSaves + levelBonus,
+
         saveSpecializationsLevels: {
-            fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"]),
-            reflex: calculateSaveLevel(playerLevel, saveSpecializations["reflex"]),
-            will: calculateSaveLevel(playerLevel, saveSpecializations["will"]),
+            fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"] as [number, number]),
+            reflex: calculateSaveLevel(playerLevel, saveSpecializations["reflex"] as [number, number]),
+            will: calculateSaveLevel(playerLevel, saveSpecializations["will"] as [number, number]),
         },
     };
 };
