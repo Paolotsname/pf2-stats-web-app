@@ -1,4 +1,3 @@
-import React from "react";
 import classData from "../data/class_data.json";
 import { PlayerStatsCombided } from "../interfaces";
 

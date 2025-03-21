@@ -1,5 +1,3 @@
-import React from "react";
-
 interface Enemy {
     level: number;
     hp: number;

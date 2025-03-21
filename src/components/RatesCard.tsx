@@ -1,4 +1,3 @@
-import React from "react";
 import { Player, PlayerStats, Enemy } from "../interfaces";
 
 interface RatesCardProps {
