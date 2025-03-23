@@ -43,3 +43,28 @@ export interface Enemy {
     spell_dc: number;
     spell_attack_bonus: number;
 }
+
+export interface EnemyStats {
+    hp: number;
+    ac: number;
+    fort: number;
+    reflex: number;
+    will: number;
+    attack_bonus: number;
+    spell_dc: number;
+    spell_attack_bonus: number;
+}
+
+export interface AverageType {
+    mean: EnemyStats;
+    median: EnemyStats;
+    mode: EnemyStats;
+    mean_pwl: EnemyStats;
+    median_pwl: EnemyStats;
+    mode_pwl: EnemyStats;
+    [key: string]: EnemyStats;
+}
+
+export interface EnemyAvaragesJson {
+    [key: string]: AverageType;
+}

@@ -8,10 +8,10 @@ import PickShowType from "./components/PickShowType";
 import PWLCheckbox from "./components/PWLCheckbox";
 import classData from "./data/class_data.json";
 import enemyData from "./data/enemy_data.json";
-import { Player, PlayerStats, PlayerStatsCombided, Enemy } from "./interfaces";
+import { Player, PlayerStats, PlayerStatsCombided, Enemy, EnemyAvaragesJson } from "./interfaces";
 
 const initialPlayer: Player = {
-    playerClass: "Alchemist",
+    playerClass: "Animist",
     playerLevel: 1,
     strength: 0,
     dexterity: 0,
@@ -38,7 +38,6 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
 
     const levelBonus = pwl ? 0 : playerLevel;
 
-    // Helper function to calculate save specialization level
     const calculateSaveLevel = (level: number, [threshold1, threshold2]: [number, number]): number => {
         if (level >= threshold2) return 2;
         if (level >= threshold1) return 1;
@@ -64,8 +63,9 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
 };
 
 const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy => {
-    const realAverageType = pwl ? averageType + "_pwl" : averageType
-    const data = enemyData[String(level)][realAverageType];
+    const realAverageType = pwl ? averageType + "_pwl" : averageType;
+    const typedEnemyData: EnemyAvaragesJson = enemyData as EnemyAvaragesJson;
+    const data = typedEnemyData[String(level)][realAverageType];
 
     return {
         level: level,
@@ -84,10 +84,10 @@ export default function App() {
     const [players, setPlayers] = useState<(PlayerStatsCombided)[]>([{ ...initialPlayer, ...calculatePlayerStats(initialPlayer, false) }]);
     const [enemies, setEnemies] = useState<Enemy[]>([getInitialEnemy(initialPlayer.playerLevel, "mean", false)]);
     const [averageType, setAverageType] = useState<string>("mean");
-    const [showType, setShowType] = useState<string>("1 player")
+    const [showType, setShowType] = useState<string>("1 player");
     const [proficiencyWithoutLevel, setProficiencyWithoutLevel] = useState<boolean>(false);
+    const [levelDifferences, setLevelDifferences] = useState<number[]>([0]);
 
-    // Update player stats when `proficiencyWithoutLevel` changes
     useEffect(() => {
         setPlayers((players) =>
             players.map((player) => ({
@@ -97,42 +97,36 @@ export default function App() {
         );
     }, [proficiencyWithoutLevel]);
 
-    // Update enemy stats when `averageType`, `proficiencyWithoutLevel`, or the first player's level changes
     useEffect(() => {
         if (players.length > 0) {
             const firstPlayerLevel = players[0].playerLevel;
-            setEnemies([getInitialEnemy(firstPlayerLevel, averageType, proficiencyWithoutLevel)]);
+            const updatedEnemies = enemies.map((_, index) =>
+                getEnemyStats(firstPlayerLevel + (levelDifferences[index] || 0), averageType, proficiencyWithoutLevel)
+            );
+            setEnemies(updatedEnemies);
         }
-    }, [averageType, proficiencyWithoutLevel, players]);
+    }, [averageType, proficiencyWithoutLevel, players, levelDifferences]);
 
-    const addPlayer = () => {
-        const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
-        setPlayers((players) => [...players, newPlayer]);
+    const handleLevelDifferenceChange = (index: number, value: number) => {
+        setLevelDifferences((prev) => {
+            const newDifferences = [...prev];
+            newDifferences[index] = value;
+            return newDifferences;
+        });
     };
 
-    const removePlayer = (index: number) => {
-        if (players.length === 1) {
-            const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
-            setPlayers([newPlayer]);
-        } else {
-            setPlayers((players) => players.filter((_, i) => i !== index))
+    const addEnemy = () => {
+        if (players.length > 0) {
+            const firstPlayerLevel = players[0].playerLevel;
+            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
+            setEnemies((enemies) => [...enemies, newEnemy]);
+            setLevelDifferences((prev) => [...prev, 0]);
         }
     };
 
-    const resetPlayer = (index: number) => {
-        // Create a new player object with initial stats and recalculated stats
-        const newPlayer = {
-            ...initialPlayer,
-            ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel)
-        };
-
-        // Create a new array with the updated player
-        const newPlayers = players.map((player, i) =>
-            i === index ? newPlayer : player
-        );
-
-        // Update the state with the new array
-        setPlayers(newPlayers);
+    const handleRemoveEnemy = (index: number) => {
+        setEnemies((prevEnemies) => prevEnemies.filter((_, i) => i !== index));
+        setLevelDifferences((prev) => prev.filter((_, i) => i !== index));
     };
 
     const updatePlayer = (index: number, updatedPlayer: Player) => {
@@ -143,16 +137,23 @@ export default function App() {
         });
     };
 
-    const addEnemy = () => {
-        if (players.length > 0) {
-            const firstPlayerLevel = players[0].playerLevel;
-            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
-            setEnemies((enemies) => [...enemies, newEnemy]);
+    const resetPlayer = (index: number) => {
+        const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+        setPlayers((players) => players.map((player, i) => (i === index ? newPlayer : player)));
+    };
+
+    const removePlayer = (index: number) => {
+        if (players.length === 1) {
+            const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+            setPlayers([newPlayer]);
+        } else {
+            setPlayers((players) => players.filter((_, i) => i !== index));
         }
     };
 
-    const handleRemoveEnemy = (index: number) => {
-        setEnemies((prevEnemies) => prevEnemies.filter((_, i) => i !== index));
+    const addPlayer = () => {
+        const newPlayer = { ...initialPlayer, ...calculatePlayerStats(initialPlayer, proficiencyWithoutLevel) };
+        setPlayers((players) => [...players, newPlayer]);
     };
 
     let calculator;
@@ -163,8 +164,8 @@ export default function App() {
                     <PlayerCard
                         player={players[0]}
                         onUpdate={(updatedPlayer) => updatePlayer(0, updatedPlayer)}
-                        onReset={() => resetPlayer(0)} // Pass onReset
-                        onRemove={() => removePlayer(0)} // Pass onRemove
+                        onReset={() => resetPlayer(0)}
+                        onRemove={() => removePlayer(0)}
                     />
                 </div>
                 <div className="flex flex-col space-y-4">
@@ -183,7 +184,9 @@ export default function App() {
                             <EnemyCard
                                 enemy={enemy}
                                 onRemove={() => handleRemoveEnemy(index)}
-                                isEnabled={false}
+                                isEnabled={true}
+                                levelDifference={levelDifferences[index] || 0}
+                                onLevelDifferenceChange={(value) => handleLevelDifferenceChange(index, value)}
                             />
                         </div>
                     ))}
@@ -202,8 +205,8 @@ export default function App() {
                             <PlayerCard
                                 player={player}
                                 onUpdate={(updatedPlayer) => updatePlayer(index, updatedPlayer)}
-                                onReset={() => resetPlayer(index)} // Pass onReset
-                                onRemove={() => removePlayer(index)} // Pass onRemove
+                                onReset={() => resetPlayer(index)}
+                                onRemove={() => removePlayer(index)}
                             />
                         </div>
                     ))}
@@ -225,7 +228,9 @@ export default function App() {
                     <EnemyCard
                         enemy={enemies[0]}
                         onRemove={() => handleRemoveEnemy(0)}
-                        isEnabled={true}
+                        isEnabled={false}
+                        levelDifference={levelDifferences[0] || 0}
+                        onLevelDifferenceChange={(value) => handleLevelDifferenceChange(0, value)}
                     />
                 </div>
             </div>

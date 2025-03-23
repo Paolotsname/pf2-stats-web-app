@@ -1,25 +1,17 @@
-interface Enemy {
-    level: number;
-    hp: number;
-    ac: number;
-    fort: number;
-    reflex: number;
-    will: number;
-    attack_bonus: number;
-    spell_dc: number;
-    spell_attack_bonus: number;
-}
+import { Enemy } from "../interfaces";
+
 
 interface EnemyCardProps {
     enemy: Enemy;
-    isEnabled: boolean; // Corrected type
-    onRemove: () => void; // Add a handler for removing the enemy
+    isEnabled: boolean;
+    onRemove: () => void;
+    levelDifference: number;
+    onLevelDifferenceChange: (value: number) => void;
 }
 
-const EnemyCard = ({ enemy, isEnabled, onRemove }: EnemyCardProps) => {
+const EnemyCard = ({ enemy, isEnabled, onRemove, levelDifference, onLevelDifferenceChange }: EnemyCardProps) => {
     const { level, hp, ac, fort, reflex, will, attack_bonus, spell_dc, spell_attack_bonus } = enemy;
 
-    // Map the color prop to valid Tailwind CSS classes
     const buttonColorClass = isEnabled
         ? `bg-red-500 hover:bg-red-600`
         : "bg-gray-400 cursor-not-allowed";
@@ -39,12 +31,24 @@ const EnemyCard = ({ enemy, isEnabled, onRemove }: EnemyCardProps) => {
             </div>
             <div className="flex flex-col space-y-1">
                 <button
-                    onClick={onRemove} // Use the onRemove handler
+                    onClick={onRemove}
                     className={`${buttonColorClass} text-white px-4 py-2 rounded transition-colors`}
-                    disabled={!isEnabled} // Disable the button if not enabled
+                    disabled={!isEnabled}
                 >
                     Remove Enemy
                 </button>
+
+                <label className="block mb-4">
+                    <strong>Level Difference</strong>:
+                    <input
+                        type="number"
+                        min="-5"
+                        max="5"
+                        value={levelDifference}
+                        onChange={(e) => onLevelDifferenceChange(Number(e.target.value))}
+                        className="ml-2 p-1 border rounded"
+                    />
+                </label>
             </div>
         </div>
     );
