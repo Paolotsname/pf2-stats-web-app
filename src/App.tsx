@@ -44,15 +44,24 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
         return 0;
     };
 
+    enum ProficiencyEnum {
+        WEAPON_ROLL = 0,
+        SPELL = 1,
+        AC = 2,
+        FORTITUDE = 3,
+        REFLEX = 4,
+        WILL = 5,
+    }
+
     return {
-        weaponStrike0: proficiencies[0] + strength + itemBonusWeapon + levelBonus,
-        weaponStrike1: proficiencies[0] + strength + itemBonusWeapon - 5 + levelBonus,
-        weaponStrike2: proficiencies[0] + strength + itemBonusWeapon - 10 + levelBonus,
-        spellAttack: proficiencies[1] ? proficiencies[1] + charisma + levelBonus : 0,
-        armorClass: proficiencies[2] + 10 + Math.min(dexterity, itemDexCap) + itemArmor + itemBonusArmor + levelBonus,
-        fortitude: proficiencies[3] + constitution + itemBonusSaves + levelBonus,
-        reflex: proficiencies[4] + dexterity + itemBonusSaves + levelBonus,
-        will: proficiencies[5] + wisdom + itemBonusSaves + levelBonus,
+        weaponStrike0: proficiencies[ProficiencyEnum.WEAPON_ROLL] + strength + itemBonusWeapon + levelBonus,
+        weaponStrike1: proficiencies[ProficiencyEnum.WEAPON_ROLL] + strength + itemBonusWeapon - 5 + levelBonus,
+        weaponStrike2: proficiencies[ProficiencyEnum.WEAPON_ROLL] + strength + itemBonusWeapon - 10 + levelBonus,
+        spellAttack: proficiencies[ProficiencyEnum.SPELL] ? proficiencies[1] + charisma + levelBonus : 0,
+        armorClass: proficiencies[ProficiencyEnum.AC] + 10 + Math.min(dexterity, itemDexCap) + itemArmor + itemBonusArmor + levelBonus,
+        fortitude: proficiencies[ProficiencyEnum.FORTITUDE] + constitution + itemBonusSaves + levelBonus,
+        reflex: proficiencies[ProficiencyEnum.REFLEX] + dexterity + itemBonusSaves + levelBonus,
+        will: proficiencies[ProficiencyEnum.WILL] + wisdom + itemBonusSaves + levelBonus,
 
         saveSpecializationsLevels: {
             fort: calculateSaveLevel(playerLevel, saveSpecializations["fort"] as [number, number]),
