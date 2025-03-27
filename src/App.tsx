@@ -34,6 +34,14 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
     const { playerClass, playerLevel, strength, dexterity, constitution, wisdom, charisma, itemBonusWeapon, itemArmor, itemBonusArmor, itemBonusSaves, itemDexCap } = player;
     const key = playerClass;
     const proficiencies = classData[key as keyof typeof classData]["proficiencies"][playerLevel - 1];
+    enum ProficiencyEnum {
+        WEAPON_ROLL = 0,
+        SPELL = 1,
+        AC = 2,
+        FORTITUDE = 3,
+        REFLEX = 4,
+        WILL = 5,
+    }
     const saveSpecializations = classData[key as keyof typeof classData]["saveSpecialization"]
 
     const levelBonus = pwl ? 0 : playerLevel;
@@ -43,15 +51,6 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
         if (level >= threshold1) return 1;
         return 0;
     };
-
-    enum ProficiencyEnum {
-        WEAPON_ROLL = 0,
-        SPELL = 1,
-        AC = 2,
-        FORTITUDE = 3,
-        REFLEX = 4,
-        WILL = 5,
-    }
 
     return {
         weaponStrike0: proficiencies[ProficiencyEnum.WEAPON_ROLL] + strength + itemBonusWeapon + levelBonus,
