@@ -15,6 +15,8 @@ function clamp(minValue: number, n: number, maxValue: number): number {
     }
 }
 
+// a target of 11.2 will have the same result as the weighted average of target = 11 and target = 12,
+// where target 11 has a weight of 80% and 12 has a weight of 20%
 function getD20Rates(
     proficiency: number | null,
     target: number | null,
@@ -25,37 +27,53 @@ function getD20Rates(
         return [0, 0, 0, 0];
     }
 
+    // [2, 19]
     let diceFacesUsed = 0;
 
-    // Calculate minimum number on dice needed for a crit
+    // we calculate the minimum number on dice needed for
+    // (proficiency bonus + dice rolled) to be for a crit
     let minToCrit = (target + 10) - proficiency;
+    // we find how many faces on the dice up to 19 are crit hits
+    // by subtracting the total of faces (19) by the amount that's
+    // not crit hits
+    //// this does mean that we are calculating the range from 19 to 1,
+    //// but since we are clamping it down later,
+    //// it will transform into a range from 19 to 2
     let sidesThatCritHit = 19 - (minToCrit - 1);
+    // sides_that_crit_hit can't be less than 0
+    // sides_that_crit_hit can't more than 18 (number of faces between 2 and 19)
     sidesThatCritHit = clamp(0, sidesThatCritHit, 18);
+    // we save how many faces are crit hits, so when we find how many are at least normal hits
+    // we can reduce the amount that are crit hits from it and find how many are normal hits
     diceFacesUsed += sidesThatCritHit;
 
-    // Calculate minimum number on dice needed for a normal hit
+    // then we repeat the logic for hits and fails, subtracting the sides that
+    // already being accounted for for being enough for a better result
+
     let minToHit = target - proficiency;
     let sidesThatHit = 19 - (minToHit - 1) - diceFacesUsed;
     sidesThatHit = clamp(0, sidesThatHit, 18 - diceFacesUsed);
     diceFacesUsed += sidesThatHit;
 
-    // Calculate minimum number on dice needed for a failure
     let minToFail = (target - 9) - proficiency;
     let sidesThatFail = 19 - (minToFail - 1) - diceFacesUsed;
     sidesThatFail = clamp(0, sidesThatFail, 18 - diceFacesUsed);
     diceFacesUsed += sidesThatFail;
 
-    // Calculate sides that crit fail (leftover faces)
+    // sides_that_crit_fail will be the leftover faces
     let sidesThatCritFail = 18 - diceFacesUsed;
 
-    // Handle Nat 20
+    // Nat 20 logic
     let nat20Value = proficiency + 20;
+    // for when Nat 20 would had been at least a hit
     if (nat20Value > target - 1) {
         let percentageThatCritHit = nat20Value - (target - 1);
         percentageThatCritHit = clamp(0, percentageThatCritHit, 1);
         sidesThatCritHit += percentageThatCritHit;
         sidesThatHit += 1 - percentageThatCritHit;
-    } else if (nat20Value > (target - 1) - 9) {
+    }
+    // for when Nat 20 would had been at least a failure
+    else if (nat20Value > (target - 1) - 9) {
         let percentageThatHit = nat20Value - (target - 1) + 9;
         percentageThatHit = clamp(0, percentageThatHit, 1);
         sidesThatHit += percentageThatHit;
@@ -64,14 +82,16 @@ function getD20Rates(
         sidesThatFail += 1;
     }
 
-    // Handle Nat 1
+    // Nat 1 logic
     let nat1Value = proficiency + 1;
     if (nat1Value > (target - 1) + 10) {
         let percentageThatHit = nat1Value - (target - 1) - 9;
         percentageThatHit = clamp(0, percentageThatHit, 1);
         sidesThatCritHit += percentageThatHit;
         sidesThatHit += 1 - percentageThatHit;
-    } else if (nat1Value > (target - 1)) {
+    }
+    // for when Nat 1 would had been at least a failure
+    else if (nat1Value > (target - 1)) {
         let percentageThatFail = nat1Value - (target - 1);
         percentageThatFail = clamp(0, percentageThatFail, 1);
         sidesThatFail += percentageThatFail;
@@ -220,7 +240,6 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
 
     return (
         <div className="space-y-8 p-4 bg-gray-50 rounded-lg shadow-md">
-            {/* Player Rolls Table */}
             <table className="table-auto border border-gray-300 w-full bg-white rounded-lg overflow-hidden shadow-sm">
                 <thead className="bg-blue-200">
                     <tr>
@@ -238,7 +257,6 @@ const RatesCard = ({ player, enemy }: RatesCardProps) => {
                 </tbody>
             </table>
 
-            {/* Enemy Rolls Table */}
             <table className="table-auto border border-gray-300 w-full bg-white rounded-lg overflow-hidden shadow-sm">
                 <thead className="bg-red-200">
                     <tr>
