@@ -12,6 +12,8 @@ export interface Player {
     itemBonusArmor: number;
     itemBonusSaves: number;
     itemDexCap: number;
+    hasAdvantage: boolean;
+    hasDisadvantage: boolean;
 }
 
 export interface PlayerStats {
@@ -42,6 +44,8 @@ export interface Enemy {
     attack_bonus: number;
     spell_dc: number;
     spell_attack_bonus: number;
+    hasAdvantage: boolean;
+    hasDisadvantage: boolean;
 }
 
 export interface EnemyStats {
@@ -65,6 +69,6 @@ export interface AverageType {
     [key: string]: EnemyStats;
 }
 
-export interface EnemyAvaragesJson {
+export interface EnemyAveragesJson {
     [key: string]: AverageType;
 }

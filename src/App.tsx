@@ -8,7 +8,7 @@ import PickShowType from "./components/PickShowType";
 import PWLCheckbox from "./components/PWLCheckbox";
 import classData from "./data/class_data.json";
 import enemyData from "./data/enemy_data.json";
-import { Player, PlayerStats, PlayerStatsCombided, Enemy, EnemyAvaragesJson } from "./interfaces";
+import { Player, PlayerStats, PlayerStatsCombided, Enemy, EnemyAveragesJson } from "./interfaces";
 
 const initialPlayer: Player = {
     playerClass: "Animist",
@@ -24,10 +24,17 @@ const initialPlayer: Player = {
     itemBonusArmor: 0,
     itemBonusSaves: 0,
     itemDexCap: 0,
+    hasAdvantage: false,
+    hasDisadvantage: false,
 };
 
 const getInitialEnemy = (playerLevel: number, averageType: string, pwl: boolean): Enemy => {
-    return getEnemyStats(playerLevel, averageType, pwl);
+    const baseStats = getEnemyStats(playerLevel, averageType, pwl);
+    return {
+        ...baseStats,
+        hasAdvantage: false,
+        hasDisadvantage: false
+    };
 };
 
 const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
@@ -71,21 +78,54 @@ const calculatePlayerStats = (player: Player, pwl: boolean): PlayerStats => {
 };
 
 const getEnemyStats = (level: number, averageType: string, pwl: boolean): Enemy => {
-    const realAverageType = pwl ? averageType + "_pwl" : averageType;
-    const typedEnemyData: EnemyAvaragesJson = enemyData as EnemyAvaragesJson;
-    const data = typedEnemyData[String(level)][realAverageType];
+    const realAverageType = pwl ? `${averageType}_pwl` : averageType;
+    const typedEnemyData: EnemyAveragesJson = enemyData as EnemyAveragesJson;
 
-    return {
-        level: level,
-        hp: data.hp,
-        ac: data.ac,
-        fort: data.fort,
-        reflex: data.reflex,
-        will: data.will,
-        attack_bonus: data.attack_bonus,
-        spell_dc: data.spell_dc,
-        spell_attack_bonus: data.spell_attack_bonus,
-    };
+    try {
+        // Check if the level exists in the data
+        if (!typedEnemyData[String(level)]) {
+            throw new Error(`No data for level ${level}`);
+        }
+
+        // Check if the average type exists for this level
+        const levelData = typedEnemyData[String(level)];
+        if (!levelData[realAverageType]) {
+            throw new Error(`No ${realAverageType} data for level ${level}`);
+        }
+
+        const data = levelData[realAverageType];
+
+        return {
+            level: level,
+            hp: data.hp,
+            ac: data.ac,
+            fort: data.fort,
+            reflex: data.reflex,
+            will: data.will,
+            attack_bonus: data.attack_bonus,
+            spell_dc: data.spell_dc,
+            spell_attack_bonus: data.spell_attack_bonus,
+            hasAdvantage: false,
+            hasDisadvantage: false
+        };
+    } catch (error) {
+        console.error('Error loading enemy data:', error);
+
+        // Return default enemy stats when data isn't found
+        return {
+            level: level,
+            hp: 0,
+            ac: 0,
+            fort: 0,
+            reflex: 0,
+            will: 0,
+            attack_bonus: 0,
+            spell_dc: 0,
+            spell_attack_bonus: 0,
+            hasAdvantage: false,
+            hasDisadvantage: false
+        };
+    }
 };
 
 export default function App() {
@@ -126,10 +166,18 @@ export default function App() {
     const addEnemy = () => {
         if (players.length > 0) {
             const firstPlayerLevel = players[0].playerLevel;
-            const newEnemy = getEnemyStats(firstPlayerLevel, averageType, proficiencyWithoutLevel);
+            const newEnemy = getInitialEnemy(firstPlayerLevel, averageType, proficiencyWithoutLevel);
             setEnemies((enemies) => [...enemies, newEnemy]);
             setLevelDifferences((prev) => [...prev, 0]);
         }
+    };
+
+    const updateEnemy = (index: number, updatedEnemy: Enemy) => {
+        setEnemies(prev => {
+            const newEnemies = [...prev];
+            newEnemies[index] = updatedEnemy;
+            return newEnemies;
+        });
     };
 
     const handleRemoveEnemy = (index: number) => {
@@ -188,15 +236,15 @@ export default function App() {
                 </div>
                 <div id="enemyList" className="flex flex-col space-y-4">
                     {enemies.map((enemy, index) => (
-                        <div key={index} className="flex p-2 rounded-lg">
-                            <EnemyCard
-                                enemy={enemy}
-                                onRemove={() => handleRemoveEnemy(index)}
-                                isEnabled={true}
-                                levelDifference={levelDifferences[index] || 0}
-                                onLevelDifferenceChange={(value) => handleLevelDifferenceChange(index, value)}
-                            />
-                        </div>
+                        <EnemyCard
+                            key={index}
+                            enemy={enemy}
+                            onRemove={() => handleRemoveEnemy(index)}
+                            isEnabled={true}
+                            levelDifference={levelDifferences[index] || 0}
+                            onLevelDifferenceChange={(value) => handleLevelDifferenceChange(index, value)}
+                            onEnemyUpdate={(updatedEnemy) => updateEnemy(index, updatedEnemy)}
+                        />
                     ))}
                     <button onClick={addEnemy} className="bg-blue-500 text-white px-4 py-2 rounded">
                         Add Enemy
@@ -236,9 +284,10 @@ export default function App() {
                     <EnemyCard
                         enemy={enemies[0]}
                         onRemove={() => handleRemoveEnemy(0)}
-                        isEnabled={false}
+                        isEnabled={true}
                         levelDifference={levelDifferences[0] || 0}
                         onLevelDifferenceChange={(value) => handleLevelDifferenceChange(0, value)}
+                        onEnemyUpdate={(updatedEnemy) => updateEnemy(0, updatedEnemy)}
                     />
                 </div>
             </div>

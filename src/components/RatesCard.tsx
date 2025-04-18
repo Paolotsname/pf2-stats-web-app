@@ -15,12 +15,11 @@ function clamp(minValue: number, n: number, maxValue: number): number {
     }
 }
 
-type Vantage = "normal" | "advantage" | "disadvantage";
-
 function getD20Rates(
     proficiency: number | null,
     target: number | null,
-    vantage: Vantage = "normal"
+    hasAdvantage: boolean,
+    hasDisadvantage: boolean,
 ): [number, number, number, number] {
     if (proficiency === null || target === null) {
         return [0, 0, 0, 0];
@@ -82,7 +81,7 @@ function getD20Rates(
     }
 
     // Apply vantage (advantage or disadvantage)
-    if (vantage === "advantage") {
+    if (hasAdvantage) {
         [sidesThatCritFail, sidesThatFail, sidesThatHit, sidesThatCritHit] = advantagize([
             sidesThatCritFail / 20,
             sidesThatFail / 20,
@@ -95,7 +94,7 @@ function getD20Rates(
             Math.round(sidesThatHit * 100 * 100) / 100,
             Math.round(sidesThatCritHit * 100 * 100) / 100,
         ];
-    } else if (vantage === "disadvantage") {
+    } else if (hasDisadvantage) {
         [sidesThatCritFail, sidesThatFail, sidesThatHit, sidesThatCritHit] = disadvantagize([
             sidesThatCritFail / 20,
             sidesThatFail / 20,
@@ -122,9 +121,10 @@ function getSaveRates(
     prof: number,
     target: number,
     profLevel: number,
-    vantage: Vantage = "normal"
+    hasAdvantage: boolean,
+    hasDisadvantage: boolean
 ): [number, number, number, number] {
-    let [cf, f, s, cs] = getD20Rates(prof, target, vantage);
+    let [cf, f, s, cs] = getD20Rates(prof, target, hasAdvantage, hasDisadvantage);
     if (profLevel >= 1) {
         cs = s + cs;
         s = 0;
@@ -183,21 +183,21 @@ const NegativeLine = ({ title, rates, isEven }: LineProps) => (
 );
 
 const RatesCard = ({ player, enemy }: RatesCardProps) => {
-    const weapon_map0 = getD20Rates(player.weaponStrike0, enemy.ac);
-    const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac);
-    const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac);
-    const spell_that_target_ac_rates = getD20Rates(player.spellAttack, enemy.ac);
-    const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc, player.saveSpecializationsLevels.fort);
-    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc, player.saveSpecializationsLevels.reflex);
-    const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc, player.saveSpecializationsLevels.will);
+    const weapon_map0 = getD20Rates(player.weaponStrike0, enemy.ac, player.hasAdvantage, player.hasDisadvantage);
+    const weapon_map1 = getD20Rates(player.weaponStrike1, enemy.ac, player.hasAdvantage, player.hasDisadvantage);
+    const weapon_map2 = getD20Rates(player.weaponStrike2, enemy.ac, player.hasAdvantage, player.hasDisadvantage);
+    const spell_that_target_ac_rates = getD20Rates(player.spellAttack, enemy.ac, player.hasAdvantage, player.hasDisadvantage);
+    const player_save_against_spell_that_target_fort = getSaveRates(player.fortitude, enemy.spell_dc, player.saveSpecializationsLevels.fort, player.hasAdvantage, player.hasDisadvantage);
+    const player_save_against_spell_that_target_reflex = getSaveRates(player.reflex, enemy.spell_dc, player.saveSpecializationsLevels.reflex, player.hasAdvantage, player.hasDisadvantage);
+    const player_save_against_spell_that_target_will = getSaveRates(player.will, enemy.spell_dc, player.saveSpecializationsLevels.will, player.hasAdvantage, player.hasDisadvantage);
 
-    const enemy_strike_rates_map0 = getD20Rates(enemy.attack_bonus, player.armorClass);
-    const enemy_strike_rates_map1 = getD20Rates(enemy.attack_bonus, player.armorClass);
-    const enemy_strike_rates_map2 = getD20Rates(enemy.attack_bonus, player.armorClass);
-    const spell_striked_rates = getD20Rates(player.armorClass, enemy.spell_attack_bonus);
-    const enemy_save_on_spell_that_target_fort_save_rates = getD20Rates(enemy.fort, player.spellAttack + 10);
-    const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.reflex, player.spellAttack + 10);
-    const enemy_save_on_spell_that_target_will_save_rates = getD20Rates(enemy.will, player.spellAttack + 10);
+    const enemy_strike_rates_map0 = getD20Rates(enemy.attack_bonus, player.armorClass, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const enemy_strike_rates_map1 = getD20Rates(enemy.attack_bonus, player.armorClass, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const enemy_strike_rates_map2 = getD20Rates(enemy.attack_bonus, player.armorClass, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const spell_striked_rates = getD20Rates(player.armorClass, enemy.spell_attack_bonus, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const enemy_save_on_spell_that_target_fort_save_rates = getD20Rates(enemy.fort, player.spellAttack + 10, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const enemy_save_on_spell_that_target_reflex_save_rates = getD20Rates(enemy.reflex, player.spellAttack + 10, enemy.hasAdvantage, enemy.hasDisadvantage);
+    const enemy_save_on_spell_that_target_will_save_rates = getD20Rates(enemy.will, player.spellAttack + 10, enemy.hasAdvantage, enemy.hasDisadvantage);
 
     const player_rates = [
         { title: "Weapon Strike 1", rates: weapon_map0 },

@@ -31,9 +31,11 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
         fortitude,
         reflex,
         will,
+        hasAdvantage,
+        hasDisadvantage,
     } = player;
 
-    const handleInputChange = (field: keyof PlayerStatsCombided, value: string | number) => {
+    const handleInputChange = (field: keyof PlayerStatsCombided, value: string | number | boolean) => {
         onUpdate({ ...player, [field]: value });
     };
 
@@ -96,6 +98,31 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
         </label>
     );
 
+    const renderVantageInput = () => (
+        <>
+            <label className="inline-flex items-center mb-4 mr-4">
+                <input
+                    type="checkbox"
+                    checked={hasAdvantage}
+                    onChange={(e) => handleInputChange("hasAdvantage", e.target.checked)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                    disabled={hasDisadvantage}
+                />
+                <span className="ml-2 font-bold">Advantage</span>
+            </label>
+            <label className="inline-flex items-center mb-4">
+                <input
+                    type="checkbox"
+                    checked={hasDisadvantage}
+                    onChange={(e) => handleInputChange("hasDisadvantage", e.target.checked)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                    disabled={hasAdvantage}
+                />
+                <span className="ml-2 font-bold">Disadvantage</span>
+            </label>
+        </>
+    );
+
     return (
         <div className="flex flex-col md:flex-row bg-white rounded-lg p-6 space-y-4 md:space-y-0 md:space-x-6">
             <div className="flex flex-col space-y-2">
@@ -126,6 +153,7 @@ const PlayerCard = ({ player, onUpdate, onReset, onRemove }: PlayerCardProps) =>
                 {renderItemInput("Item Bonus (Armor)", "itemBonusArmor", itemBonusArmor)}
                 {renderItemInput("Item Bonus (Saves)", "itemBonusSaves", itemBonusSaves)}
                 {renderItemInput("Dex Cap", "itemDexCap", itemDexCap)}
+                {renderVantageInput()}
             </div>
             <div className="flex-1">
                 <p><strong>Weapon Strike (1st):</strong> +{weaponStrike0}</p>
